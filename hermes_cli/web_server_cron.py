@@ -328,7 +328,7 @@ def _profile_env_value(home: Path, key: str) -> str:
 def _gateway_fire_endpoint(profile: str, home: Path) -> str:
     """Loopback URL of the gateway api_server's cron-fire route.
 
-    Port resolution mirrors gateway/config.py's api_server load order for the LISTENER-OWNER
+    Port resolution mirrors hermes_agent/gateway/config.py's api_server load order for the LISTENER-OWNER
     profile: ``platforms.api_server.extra.port`` in its config.yaml, then ``API_SERVER_PORT``
     (process env for the active profile, the profile's own .env otherwise), then 8642. Loopback
     is safe: dashboard and gateway share a network namespace in every supported deployment.

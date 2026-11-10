@@ -38,14 +38,14 @@ def noted_completion(row):
 
 async def reopen_for_turn(authority, ref):
     """A turn (never a note) makes *ref*'s finalized row live again: a local session's receipt tip, or
-    the row of a conversation its chat moved past (gateway/session_detached.py), which the chat's /new
+    the row of a conversation its chat moved past (hermes_agent/gateway/session_detached.py), which the chat's /new
     ended."""
-    from gateway.session_runtime_workers import tracked_write
+    from hermes_agent.gateway.session_runtime_workers import tracked_write
     live = authority.sessions.get(ref.session_id)
     if live is not None and live.detached:
-        from gateway.session_api import reopen_api_session as reopen
+        from hermes_agent.gateway.session_api import reopen_api_session as reopen
     else:
-        from gateway.session_local_recovery import reopen_local_session as reopen
+        from hermes_agent.gateway.session_local_recovery import reopen_local_session as reopen
     await tracked_write(authority, partial(reopen, authority, ref))
 
 
@@ -55,14 +55,14 @@ async def note_if_unviewed(authority, ref, row):
     input committed after; the viewer check and the decision share one loop step."""
     if not noted_completion(row):
         return None
-    from gateway.session_runtime_workers import tracked_write
+    from hermes_agent.gateway.session_runtime_workers import tracked_write
     live = authority.sessions.get(ref.session_id)
     descriptor = row['payload']['local_automation_v1']
     if live is None or (live.subscribers and _producer(descriptor['identity']) not in _ALWAYS_NOTED):
         # The claim left a closed row closed for a note; the turn reopens it as any first turn does.
         await reopen_for_turn(authority, ref)
         return None
-    from gateway.session_viewer_close import _physical_target
+    from hermes_agent.gateway.session_viewer_close import _physical_target
     metadata = {'completion_note': sorted(set(descriptor.get('identities') or ()) | {descriptor['identity']})}
     metadata.update({key: descriptor[key] for key in ('display_text', 'notification_category') if key in descriptor})
     target = _physical_target(authority, ref.session_id)

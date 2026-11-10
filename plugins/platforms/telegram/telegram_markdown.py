@@ -3,7 +3,7 @@
 import bisect
 import re
 
-from gateway.platforms.helpers import convert_table_to_bullets as _wrap_markdown_tables
+from hermes_agent.gateway.platforms.helpers import convert_table_to_bullets as _wrap_markdown_tables
 
 # Stands in for the ** of a line-start **> expandable-quote opener while emphasis is resolved.
 _EXPANDABLE_QUOTE = "\x00EQ\x00"

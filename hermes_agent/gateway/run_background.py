@@ -6,11 +6,11 @@ import os
 from typing import Optional
 
 from agent.i18n import t
-from gateway.media_repair import repair_explicit_computer_use_media_paths
-from gateway.platforms.base import BasePlatformAdapter
-from gateway.session import SessionSource
+from hermes_agent.gateway.media_repair import repair_explicit_computer_use_media_paths
+from hermes_agent.gateway.platforms.base import BasePlatformAdapter
+from hermes_agent.gateway.session import SessionSource
 
-logger = logging.getLogger("gateway.run")
+logger = logging.getLogger("hermes_agent.gateway.run")
 
 
 def _bg_prompt_preview(prompt: str, limit: int = 60) -> str:
@@ -37,7 +37,7 @@ class GatewayBackgroundMixin:
         media_types: Optional[list[str]] = None,
     ) -> None:
         """Execute a background agent task and deliver the result to the chat."""
-        from gateway.run import (
+        from hermes_agent.gateway.run import (
             _checkpoint_agent_kwargs, _current_max_iterations, _load_gateway_config,
             _platform_config_key,
         )
@@ -79,7 +79,7 @@ class GatewayBackgroundMixin:
                     logger.warning("Background task vision enrichment failed: %s", e, exc_info=True)
 
             def run_sync():
-                from gateway.session_context import declare_stateless_channel
+                from hermes_agent.gateway.session_context import declare_stateless_channel
                 # This finite /bg session has no route for a completion after its final reply.
                 declare_stateless_channel()
                 agent = AIAgent(
@@ -147,8 +147,8 @@ class GatewayBackgroundMixin:
                     )
             # Route each media file by type (voice bubble / video / image / document), as the
             # streaming + kanban paths do.
-            from gateway.platforms.base import should_send_media_as_audio as _should_send_media_as_audio
-            from gateway.run_notifications import _IMAGE_EXTS, _VIDEO_EXTS
+            from hermes_agent.gateway.platforms.base import should_send_media_as_audio as _should_send_media_as_audio
+            from hermes_agent.gateway.run_notifications import _IMAGE_EXTS, _VIDEO_EXTS
             for media_path, _is_voice in (media_files or []):
                 _ext = os.path.splitext(media_path)[1].lower()
                 with suppress(Exception):
@@ -168,7 +168,7 @@ class GatewayBackgroundMixin:
         except Exception:
             logger.exception("Background task %s failed", task_id)
             # Automatic failure diagnostic (the task produced no requested result to deliver).
-            from gateway.bot_peer_notices import automatic_notices_allowed
+            from hermes_agent.gateway.bot_peer_notices import automatic_notices_allowed
             with suppress(Exception):
                 if automatic_notices_allowed(source):
                     await adapter.emit_warning(

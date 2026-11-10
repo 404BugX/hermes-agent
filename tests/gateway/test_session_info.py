@@ -3,7 +3,7 @@
 import pytest
 from unittest.mock import patch
 
-from gateway.run import GatewayRunner
+from hermes_agent.gateway.run import GatewayRunner
 
 
 @pytest.fixture()
@@ -18,9 +18,9 @@ def _patch_info(tmp_path, config_yaml, model, runtime):
     if config_yaml is not None:
         cfg_path.write_text(config_yaml)
     return (
-        patch("gateway.run._hermes_home", tmp_path),
-        patch("gateway.run._resolve_gateway_model", return_value=model),
-        patch("gateway.run._resolve_runtime_agent_kwargs", return_value=runtime),
+        patch("hermes_agent.gateway.run._hermes_home", tmp_path),
+        patch("hermes_agent.gateway.run._resolve_gateway_model", return_value=model),
+        patch("hermes_agent.gateway.run._resolve_runtime_agent_kwargs", return_value=runtime),
     )
 
 
@@ -121,8 +121,8 @@ class TestResetNoticeSessionInfo:
     _RUNTIME = {"provider": "", "base_url": "", "api_key": ""}
 
     def _source(self):
-        from gateway.config import Platform
-        from gateway.session import SessionSource
+        from hermes_agent.gateway.config import Platform
+        from hermes_agent.gateway.session import SessionSource
         return SessionSource(
             platform=Platform.TELEGRAM, chat_id="123", user_id="u1",
             profile="planner",
@@ -143,9 +143,9 @@ class TestResetNoticeSessionInfo:
         from types import SimpleNamespace
         base, profile = self._homes(tmp_path)
         runner.config = SimpleNamespace(multiplex_profiles=True)
-        with patch("gateway.run._hermes_home", base), \
+        with patch("hermes_agent.gateway.run._hermes_home", base), \
              patch.object(GatewayRunner, "_resolve_profile_home_for_source", return_value=profile), \
-             patch("gateway.run._resolve_runtime_agent_kwargs", return_value=self._RUNTIME):
+             patch("hermes_agent.gateway.run._resolve_runtime_agent_kwargs", return_value=self._RUNTIME):
             info = runner._reset_notice_session_info(self._source())
         assert "profile-model" in info
         assert "anthropic" in info

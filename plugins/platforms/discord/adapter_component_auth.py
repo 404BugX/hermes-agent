@@ -3,7 +3,7 @@ from __future__ import annotations
 
 from typing import Any, Callable, Optional
 
-from gateway.platforms._shared import platform_gate_env as _scoped_gate_env
+from hermes_agent.gateway.platforms._shared import platform_gate_env as _scoped_gate_env
 
 
 def component_chat_context(interaction, thread_cls) -> tuple[str, Optional[str], Optional[str]]:
@@ -73,7 +73,7 @@ def _component_check_auth(
     # Pairing store (mirrors ``authz_mixin._check_authorization``): paired users click without allowlist.
     if uid:
         try:
-            from gateway.pairing import PairingStore
+            from hermes_agent.gateway.pairing import PairingStore
             store = PairingStore()
             if store.is_approved("discord", uid):
                 return True

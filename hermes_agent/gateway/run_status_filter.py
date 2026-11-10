@@ -1,4 +1,4 @@
-"""Gateway status-line filtering helpers (facade: ``gateway/run.py``'s ``_prepare_gateway_status_message``).
+"""Gateway status-line filtering helpers (facade: ``hermes_agent/gateway/run.py``'s ``_prepare_gateway_status_message``).
 
 DM-only status lines:
 The blocked-overflow warning (context over the compression threshold, compression blocked) tells the reader to

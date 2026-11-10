@@ -35,7 +35,7 @@ def may_answer(authority: dict, actor_id: Any, admin_ids: Iterable[str] = (), ex
     ``slash_access.policy_for_chat_type``), the same scope ``/approve`` and relay answers pass as
     ``admin_ids``. With ``approvers`` narrowed, an entry with no requester recorded (a turn merged
     from two senders) is answered by approvers and admins only, never by anyone."""
-    from gateway.slash_access import _coerce_id_list, policy_for_chat_type
+    from hermes_agent.gateway.slash_access import _coerce_id_list, policy_for_chat_type
 
     actor = str(actor_id or "").strip()
     requester = str(authority.get("requester_id") or "")
@@ -51,8 +51,8 @@ def may_answer(authority: dict, actor_id: Any, admin_ids: Iterable[str] = (), ex
 
 def runner_admin_ids(source: Any) -> frozenset[str]:
     """Admins of the profile whose bot received *source*: the same policy the text ``/approve`` uses."""
-    from gateway.run import _gateway_runner_ref
-    from gateway.slash_access import policy_for_runner_source
+    from hermes_agent.gateway.run import _gateway_runner_ref
+    from hermes_agent.gateway.slash_access import policy_for_runner_source
 
     return policy_for_runner_source(_gateway_runner_ref(), source).admin_user_ids
 

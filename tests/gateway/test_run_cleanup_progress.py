@@ -20,7 +20,7 @@ from types import SimpleNamespace
 
 import pytest
 
-from gateway.config import Platform, PlatformConfig
+from hermes_agent.gateway.config import Platform, PlatformConfig
 
 
 async def _fire_post_delivery_cb(cb):
@@ -32,8 +32,8 @@ async def _fire_post_delivery_cb(cb):
     result = cb()
     if _inspect.isawaitable(result):
         await result
-from gateway.platforms.base import BasePlatformAdapter, SendResult
-from gateway.session import SessionSource
+from hermes_agent.gateway.platforms.base import BasePlatformAdapter, SendResult
+from hermes_agent.gateway.session import SessionSource
 
 
 # ---------------------------------------------------------------------------
@@ -94,7 +94,7 @@ class NoDeleteAdapter(CleanupCaptureAdapter):
 
     async def delete_message(self, chat_id, message_id) -> bool:  # type: ignore[override]
         # Pretend to be an adapter whose platform doesn't support deletion:
-        # match the base class behavior exactly. gateway/run.py checks
+        # match the base class behavior exactly. hermes_agent/gateway/run.py checks
         # ``type(adapter).delete_message is BasePlatformAdapter.delete_message``
         # to detect this, so we re-assign at class body level below.
         raise AssertionError("should not be called — cleanup must skip this adapter")
@@ -132,7 +132,7 @@ class FailingAgent:
             cb("tool.started", "terminal", "pwd", {})
             time.sleep(0.2)
         # Empty final_response + failed=True is the shape the gateway
-        # actually returns on provider errors (see gateway/run.py where
+        # actually returns on provider errors (see hermes_agent/gateway/run.py where
         # failed keys are only propagated when final_response is empty).
         return {
             "final_response": "",
@@ -144,7 +144,7 @@ class FailingAgent:
 
 
 def _make_runner(adapter):
-    gateway_run = importlib.import_module("gateway.run")
+    gateway_run = importlib.import_module("hermes_agent.gateway.run")
     GatewayRunner = gateway_run.GatewayRunner
     runner = object.__new__(GatewayRunner)
     runner.adapters = {adapter.platform: adapter}
@@ -184,7 +184,7 @@ def _install_fakes(
     monkeypatch.setitem(sys.modules, "run_agent", fake_run_agent)
     import tools.terminal_tool
 
-    gateway_run = importlib.import_module("gateway.run")
+    gateway_run = importlib.import_module("hermes_agent.gateway.run")
     monkeypatch.setattr(gateway_run, "_resolve_runtime_agent_kwargs", lambda: {"api_key": "fake"})
 
     # Wire the per-platform cleanup_progress flag via the config loader the

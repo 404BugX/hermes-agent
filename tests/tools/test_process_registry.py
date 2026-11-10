@@ -1359,12 +1359,12 @@ class TestKillProcess:
         try:
             # Post-#21561: liveness probe routes through
             # ``ProcessRegistry._is_host_pid_alive`` (→
-            # ``gateway.status._pid_exists``), and the actual kill on POSIX
+            # ``hermes_agent.gateway.status._pid_exists``), and the actual kill on POSIX
             # routes through ``psutil.Process(pid).terminate()``. Neither
             # touches ``os.kill`` directly. Mock both seams.  Disable the
             # SIGKILL-escalation step (grace=0) so it doesn't call
             # ``psutil.wait_procs`` on the FakeProcess.
-            with patch("gateway.status._pid_exists", side_effect=lambda pid: kill_state["alive"]), \
+            with patch("hermes_agent.gateway.status._pid_exists", side_effect=lambda pid: kill_state["alive"]), \
                  patch.object(ProcessRegistry, "_daemon_term_grace_seconds",
                               staticmethod(lambda: 0.0)), \
                  patch.object(_psutil, "Process", side_effect=lambda pid: FakeProcess(pid)):
@@ -2136,7 +2136,7 @@ class TestSystemdCgroupIsolation:
         """Opt-in: mark this test as running AS the live gateway process."""
         monkeypatch.setenv("_HERMES_GATEWAY", "1")
         monkeypatch.setattr(
-            "gateway.status.get_running_pid",
+            "hermes_agent.gateway.status.get_running_pid",
             lambda *, cleanup_stale=False: os.getpid(),
         )
 
@@ -2171,7 +2171,7 @@ class TestSystemdCgroupIsolation:
             lambda: True,
         )
         monkeypatch.setattr(
-            "gateway.restart.is_gateway_supervisor_process",
+            "hermes_agent.gateway.restart.is_gateway_supervisor_process",
             lambda environ=None: True,
         )
         # _build_systemd_scope_argv calls shutil.which — point it at a stub.
@@ -2236,7 +2236,7 @@ class TestSystemdCgroupIsolation:
             lambda: False,
         )
         monkeypatch.setattr(
-            "gateway.restart.is_gateway_supervisor_process",
+            "hermes_agent.gateway.restart.is_gateway_supervisor_process",
             lambda environ=None: True,
         )
 
@@ -2263,7 +2263,7 @@ class TestSystemdCgroupIsolation:
             lambda: True,
         )
         monkeypatch.setattr(
-            "gateway.restart.is_gateway_supervisor_process",
+            "hermes_agent.gateway.restart.is_gateway_supervisor_process",
             lambda environ=None: False,
         )
 
@@ -2330,14 +2330,14 @@ class TestSystemdCgroupIsolation:
     ):
         """Gateway descendants are not the gateway process that owns the PID file.
 
-        _HERMES_GATEWAY is inherited (and set by importing gateway.run), so
+        _HERMES_GATEWAY is inherited (and set by importing hermes_agent.gateway.run), so
         both it and INVOCATION_ID may be present in a child process. The
         PID-ownership gate must still keep the scope path off.
         """
         monkeypatch.setenv("INVOCATION_ID", "inherited-systemd-marker")
         monkeypatch.setenv("_HERMES_GATEWAY", "1")
         monkeypatch.setattr(
-            "gateway.status.get_running_pid",
+            "hermes_agent.gateway.status.get_running_pid",
             lambda *, cleanup_stale=False: os.getpid() + 1,
         )
         monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
@@ -2389,7 +2389,7 @@ class TestSystemdCgroupIsolation:
             lambda: True,
         )
         monkeypatch.setattr(
-            "gateway.restart.is_gateway_supervisor_process",
+            "hermes_agent.gateway.restart.is_gateway_supervisor_process",
             lambda environ=None: True,
         )
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
@@ -2424,7 +2424,7 @@ class TestSystemdCgroupIsolation:
             lambda: True,
         )
         monkeypatch.setattr(
-            "gateway.restart.is_gateway_supervisor_process",
+            "hermes_agent.gateway.restart.is_gateway_supervisor_process",
             lambda environ=None: True,
         )
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
@@ -2474,7 +2474,7 @@ class TestSystemdCgroupIsolation:
             lambda: True,
         )
         monkeypatch.setattr(
-            "gateway.restart.is_gateway_supervisor_process",
+            "hermes_agent.gateway.restart.is_gateway_supervisor_process",
             lambda environ=None: True,
         )
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
@@ -2511,7 +2511,7 @@ class TestSystemdCgroupIsolation:
             lambda: True,
         )
         monkeypatch.setattr(
-            "gateway.restart.is_gateway_supervisor_process",
+            "hermes_agent.gateway.restart.is_gateway_supervisor_process",
             lambda environ=None: True,
         )
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")

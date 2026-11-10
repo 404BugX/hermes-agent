@@ -3,10 +3,10 @@ import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, Mock
 
-from gateway.config import GatewayConfig, Platform, PlatformConfig, load_gateway_config
-from gateway.platforms.event import MessageType
-from gateway.run import GatewayRunner
-from gateway.session import SessionSource
+from hermes_agent.gateway.config import GatewayConfig, Platform, PlatformConfig, load_gateway_config
+from hermes_agent.gateway.platforms.event import MessageType
+from hermes_agent.gateway.run import GatewayRunner
+from hermes_agent.gateway.session import SessionSource
 
 import os
 
@@ -244,8 +244,8 @@ def test_observed_group_context_uses_shared_source_and_prompt_for_later_mentions
 
 
 def test_observed_group_context_preserves_slash_command_text_for_dispatch():
-    from gateway.platforms.base import Platform, SessionSource
-    from gateway.platforms.event import MessageEvent, MessageType
+    from hermes_agent.gateway.platforms.base import Platform, SessionSource
+    from hermes_agent.gateway.platforms.event import MessageEvent, MessageType
 
     adapter = _make_adapter(
         require_mention=True,
@@ -284,8 +284,8 @@ def test_observe_mode_commands_and_text_turns_share_one_group_session():
     """Regression: in a non-forum observe chat a slash command kept the sender id for slash access
     checks, so the default ``group_sessions_per_user`` keyed it to a per-user session; ``/new``,
     ``/model`` and skill commands acted on a session the observed transcript never reached."""
-    from gateway.config import GatewayConfig
-    from gateway.session import build_session_context, build_session_context_prompt, build_session_key
+    from hermes_agent.gateway.config import GatewayConfig
+    from hermes_agent.gateway.session import build_session_context, build_session_context_prompt, build_session_key
 
     adapter = _make_adapter(require_mention=True, allowed_chats=["-100"], group_allowed_chats=["-100"],
                             observe_unmentioned_group_messages=True)
@@ -315,7 +315,7 @@ def test_observe_mode_commands_and_text_turns_share_one_group_session():
 
 
 def test_shared_group_observe_source_is_authorized_by_group_allowed_chats(monkeypatch):
-    from gateway.run import GatewayRunner
+    from hermes_agent.gateway.run import GatewayRunner
 
     runner = object.__new__(GatewayRunner)
     source = SessionSource(
@@ -706,7 +706,7 @@ def test_top_level_require_mention_bridges_to_telegram(monkeypatch, tmp_path):
 
     # The adapter's extra dict must also carry the setting so that
     # _telegram_require_mention() works even without the env var.
-    tg_cfg = config.platforms.get(__import__("gateway.config", fromlist=["Platform"]).Platform.TELEGRAM)
+    tg_cfg = config.platforms.get(__import__("hermes_agent.gateway.config", fromlist=["Platform"]).Platform.TELEGRAM)
     if tg_cfg is not None:
         assert tg_cfg.extra.get("require_mention") is True
 

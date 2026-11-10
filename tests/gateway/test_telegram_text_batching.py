@@ -10,9 +10,9 @@ from unittest.mock import AsyncMock, patch
 
 import pytest
 
-from gateway.config import Platform, PlatformConfig
-from gateway.platforms.base import SessionSource
-from gateway.platforms.event import MessageEvent, MessageType
+from hermes_agent.gateway.config import Platform, PlatformConfig
+from hermes_agent.gateway.platforms.base import SessionSource
+from hermes_agent.gateway.platforms.event import MessageEvent, MessageType
 from tests.waiting import async_wait_until
 
 
@@ -440,7 +440,7 @@ class TestHoldInboundAcrossReconnect:
     async def test_non_retryable_fatal_discards_held_with_warning(self):
         adapter = _make_adapter()
         adapter._held_inbound_events = [_make_event("doomed")]
-        from gateway.platforms.base import BasePlatformAdapter
+        from hermes_agent.gateway.platforms.base import BasePlatformAdapter
 
         def _base_fatal(self, code, message, *, retryable):
             self._fatal_error_code = code
@@ -468,7 +468,7 @@ class TestHoldInboundAcrossReconnect:
         adapter._held_inbound_events = [_make_event("survives-network-fatal")]
         adapter._drop_delayed_deliveries = True  # fatal/disconnect already set
 
-        from gateway.platforms.base import BasePlatformAdapter
+        from hermes_agent.gateway.platforms.base import BasePlatformAdapter
 
         def _base_fatal(self, code, message, *, retryable):
             self._fatal_error_code = code
