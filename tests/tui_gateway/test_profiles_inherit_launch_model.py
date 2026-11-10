@@ -14,7 +14,7 @@ import hermes_yaml as yaml
 import pytest
 
 from hermes_cli.config import DEFAULT_CONFIG, atomic_config_write, read_user_config_raw
-import tui_gateway.server as srv
+import hermes_agent.tui_gateway.server as srv
 
 
 @pytest.mark.parametrize(
