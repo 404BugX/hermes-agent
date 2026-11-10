@@ -1621,7 +1621,7 @@ Related entrypoints:
 
 ```bash
 hermes-acp
-python -m acp_adapter
+python -m hermes_agent.acp_adapter
 ```
 
 Install support first:
