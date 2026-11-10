@@ -205,7 +205,7 @@ errors.log
 .hermes_history
 
 # Distribution-authored scheduler/skills state only
-cron/*
+hermes_agent/cron/*
 !cron/jobs.json
 skills/.*
 ```
