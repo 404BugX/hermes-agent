@@ -49,8 +49,8 @@ def _clean_error_text(error: Any, max_chars: int = 200) -> str:
 def describe_subagent_failure(failure_reason: Any, error: Any, max_chars: int = 200) -> str:
     """Plain-language reason for a failed child: the classified ``failure_reason`` gloss when there is one,
     else the child's own error text reduced to one clean line."""
-    # One gloss table for every surface (agent/turn_failure_copy.py); the child is the subject.
-    from agent.turn_failure_copy import failure_cause_gloss
+    # One gloss table for every surface (hermes_agent/agent/turn_failure_copy.py); the child is the subject.
+    from hermes_agent.agent.turn_failure_copy import failure_cause_gloss
 
     gloss = failure_cause_gloss(failure_reason, subject="it", possessive="its")
     return gloss or _clean_error_text(error, max_chars)
@@ -204,7 +204,7 @@ def _build_child_system_prompt(
         _ctx_files = ""
         with _quiet("subagent: workspace context-files load failed", exc_info=True):
             # See #64590.
-            from agent.prompt_builder import build_context_files_prompt
+            from hermes_agent.agent.prompt_builder import build_context_files_prompt
             _ctx_files = build_context_files_prompt(cwd=str(workspace_path), skip_soul=True)
         if _ctx_files.strip():
             parts.append(_CONTEXT_FILES_INTRO + _ctx_files.strip())
@@ -221,7 +221,7 @@ def _build_child_system_prompt(
 def _resolve_workspace_hint(parent_agent) -> Optional[str]:
     """Best-effort local workspace hint for child prompts: only a concrete
     absolute directory is ever injected (never a fake container path)."""
-    from agent.runtime_cwd import scope_terminal_cwd
+    from hermes_agent.agent.runtime_cwd import scope_terminal_cwd
     candidates = [
         scope_terminal_cwd(), getattr(getattr(parent_agent, "_subdirectory_hints", None), "working_dir", None),
         getattr(parent_agent, "terminal_cwd", None), getattr(parent_agent, "cwd", None),
@@ -404,7 +404,7 @@ class _ChildProgressRelay:
                     rec["tool_count"] = self.tool_count
                     rec["last_tool"] = tool_name or ""
         if self.spinner:
-            from agent.display import get_tool_emoji
+            from hermes_agent.agent.display import get_tool_emoji
             line = f"{get_tool_emoji(tool_name or '')} {tool_name}"
             short = _short(preview, 35) if preview else ""
             self._tree_line(f'{line}  "{short}"' if short else line)

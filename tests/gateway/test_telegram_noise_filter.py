@@ -2,7 +2,7 @@
 
 import pytest
 
-from agent.conversation_compression import (
+from hermes_agent.agent.conversation_compression import (
     COMPRESSION_REFUSED_WOULD_GROW_WARNING,
     CONTEXT_OVERFLOW_BLOCKED_WARNING_TEMPLATE,
     ROUTINE_COMPRESSION_STATUS_SAMPLES,
@@ -166,7 +166,7 @@ def test_all_routine_compression_statuses_suppressed_from_source_constants(
     """Every ROUTINE compression status the agent actually emits is filtered.
 
     Iterates the sample-formatted status strings built from the SAME
-    constants the emission sites use (agent/conversation_compression.py's
+    constants the emission sites use (hermes_agent/agent/conversation_compression.py's
     ROUTINE_COMPRESSION_STATUS_SAMPLES), so a reworded emit site that drifts
     past the noise regex fails here without anyone remembering to re-copy
     the literal into this file.
@@ -337,7 +337,7 @@ def test_telegram_final_response_redacts_auth_secrets():
 # never real tokens — but they match the canonical redaction patterns. The
 # outbound gateway redactor previously used a narrow local pattern subset that
 # leaked the GitHub fine-grained PAT and Telegram bot-token shapes; it now
-# delegates to agent.redact.redact_sensitive_text, the authoritative redactor
+# delegates to hermes_agent.agent.redact.redact_sensitive_text, the authoritative redactor
 # already used for logs/tool-output/approval prompts.
 _ISSUE_23810_SECRET_SHAPES = {
     "openai_sk": "sk-" + "a1b2c3d4e5f6a7b8c9d0",

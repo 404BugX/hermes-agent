@@ -1904,7 +1904,7 @@ class TestHandleProcessRedaction:
     """
 
     def _setup(self, monkeypatch, command, output):
-        import agent.redact as _r
+        import hermes_agent.agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
         from hermes_agent.tools import process_registry as pr
         reg = ProcessRegistry()
@@ -1954,7 +1954,7 @@ class TestHandleProcessRedaction:
         assert "curl" in entry["command"]
 
     def test_disabled_passes_through(self, monkeypatch):
-        import agent.redact as _r
+        import hermes_agent.agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", False)
         from hermes_agent.tools import process_registry as pr
         reg = ProcessRegistry()
@@ -1974,7 +1974,7 @@ class TestHandleProcessTransformHook:
     replacement the plugin returns is still masked (the ordering the foreground path documents)."""
 
     def _setup(self, monkeypatch, output, *, hook):
-        import agent.redact as _r
+        import hermes_agent.agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
         monkeypatch.setattr("hermes_cli.lifecycle.invoke_hook", hook)
         from hermes_agent.tools import process_registry as pr
@@ -2893,7 +2893,7 @@ class TestNotificationRedaction:
 
     def test_completion_notification_redacts_secret(self, monkeypatch):
         """_move_to_finished completion notification redacts API keys."""
-        import agent.redact as _r
+        import hermes_agent.agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
         from hermes_agent.tools import process_registry as pr
 
@@ -2917,7 +2917,7 @@ class TestNotificationRedaction:
 
     def test_watch_match_notification_redacts_secret(self, monkeypatch):
         """_check_watch_patterns watch_match notification redacts secrets."""
-        import agent.redact as _r
+        import hermes_agent.agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
         from hermes_agent.tools import process_registry as pr
 

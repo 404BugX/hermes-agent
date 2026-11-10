@@ -16,7 +16,7 @@ class GeminiProfile(ProviderProfile):
     def build_extra_body(self, *, session_id: str | None = None, **context: Any) -> dict[str, Any]:
         """Native: ``thinking_config``; OpenAI-compat /openai subpath:
         ``extra_body.google.thinking_config`` (snake_case)."""
-        from agent.transports.chat_completions import (
+        from hermes_agent.agent.transports.chat_completions import (
             _build_gemini_thinking_config,
             _is_gemini_openai_compat_base_url,
             _snake_case_gemini_thinking_config,
@@ -29,8 +29,8 @@ class GeminiProfile(ProviderProfile):
         if self.name == "gemini" and _is_gemini_openai_compat_base_url(base_url):
             thinking_config = _snake_case_gemini_thinking_config(raw)
             return {"extra_body": {"google": {"thinking_config": thinking_config}}} if thinking_config else {}
-        from agent.gemini_long_decode import long_decode_max_output_tokens
-        from agent.gemini_native_adapter import is_native_gemini_base_url
+        from hermes_agent.agent.gemini_long_decode import long_decode_max_output_tokens
+        from hermes_agent.agent.gemini_native_adapter import is_native_gemini_base_url
 
         # Long decode exists only on native generateContent (not /openai, not proxies).
         budget = long_decode_max_output_tokens(context.get("model") or "", context.get("reasoning_config"))

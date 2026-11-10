@@ -4,7 +4,7 @@ recovery tool results).
 
 Role alternation is preserved on every path: an invalid batch is answered with tool-role
 error results (never a user message), and the exits close any open tool-result tail
-(#48879). Nothing here imports ``agent.conversation_loop`` at module level (cycle).
+(#48879). Nothing here imports ``hermes_agent.agent.conversation_loop`` at module level (cycle).
 """
 
 from __future__ import annotations
@@ -14,13 +14,13 @@ import logging
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional
 
-from agent.message_metadata import append_message
-from agent.message_sanitization import (close_interrupted_tool_sequence, coalesce_tool_call_id,
+from hermes_agent.agent.message_metadata import append_message
+from hermes_agent.agent.message_sanitization import (close_interrupted_tool_sequence, coalesce_tool_call_id,
                                           normalize_provider_tool_call_ids)
-from agent.turn_failure_copy import site_copy, stamp_failure
+from hermes_agent.agent.turn_failure_copy import site_copy, stamp_failure
 from hermes_constants import FINISH_REASON_LENGTH
 
-logger = logging.getLogger("agent.conversation_loop")
+logger = logging.getLogger("hermes_agent.agent.conversation_loop")
 
 
 @dataclass
@@ -78,7 +78,7 @@ def validate_tool_calls(
     advance only when a turn has NO valid call, so a degenerate model still halts at
     3; args cut off mid-stream (routers rewrite ``length`` → ``tool_calls``) are refused
     outright rather than retried."""
-    from agent.conversation_loop import _invalid_tool_name_error_content
+    from hermes_agent.agent.conversation_loop import _invalid_tool_name_error_content
 
     tool_calls = assistant_message.tool_calls
     valid_names = agent.valid_tool_names
