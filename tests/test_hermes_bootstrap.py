@@ -208,10 +208,10 @@ def guarded(name, globals=None, locals=None, fromlist=(), level=0):
         if name == '__future__':
             return real_import(name, globals, locals, fromlist, level)
         if not seen:
-            assert name == 'hermes_bootstrap', name
+            assert name == 'hermes_agent.hermes_bootstrap', name
             module = real_import(name, globals, locals, fromlist, level)
-            assert module._pm_repair is True
-            assert module._bootstrap_applied is (sys.platform == 'win32')
+            assert sys.modules[name]._pm_repair is True
+            assert sys.modules[name]._bootstrap_applied is (sys.platform == 'win32')
             seen.append(name)
             return module
         raise Boundary()
@@ -220,7 +220,7 @@ builtins.__import__ = guarded
 try:
     runpy.run_path(entry, run_name='__main__')
 except Boundary:
-    assert seen == ['hermes_bootstrap']
+    assert seen == ['hermes_agent.hermes_bootstrap']
     print('bootstrap-before-app')
 else:
     raise AssertionError('entrypoint never reached the application import boundary')
@@ -313,7 +313,9 @@ def test_entrypoint_tolerates_only_an_absent_bootstrap(tmp_path, path, bootstrap
     fake_root = tmp_path / "root"
     fake_root.mkdir()
     if bootstrap is not None:
-        (fake_root / "hermes_bootstrap.py").write_text(bootstrap)
+        (fake_root / "hermes_agent").mkdir()
+        (fake_root / "hermes_agent" / "__init__.py").write_text("")
+        (fake_root / "hermes_agent" / "hermes_bootstrap.py").write_text(bootstrap)
     program = r"""
 import builtins, runpy, sys
 fake_root, entry = sys.argv[1:]
@@ -321,7 +323,7 @@ sys.path.insert(0, fake_root)
 real_import = builtins.__import__
 class Boundary(BaseException): pass
 def guarded(name, globals=None, locals=None, fromlist=(), level=0):
-    if globals and globals.get('__file__') == entry and name not in ('__future__', 'hermes_bootstrap'):
+    if globals and globals.get('__file__') == entry and name not in ('__future__', 'hermes_agent.hermes_bootstrap'):
         raise Boundary()
     return real_import(name, globals, locals, fromlist, level)
 builtins.__import__ = guarded
@@ -395,7 +397,7 @@ class TestHardenImportPath:
             sys.path[:] = ["", "/cwd/proj", "/usr/lib"]
             os.environ["HERMES_PYTHON_SRC_ROOT"] = "/env/hermes"
             hb.harden_import_path()
-            assert sys.path[0] == os.path.dirname(os.path.abspath(hb.__file__))
+            assert sys.path[0] == os.path.dirname(os.path.dirname(os.path.abspath(hb.__file__)))
             assert "/env/hermes" not in sys.path
         finally:
             sys.path[:] = original
