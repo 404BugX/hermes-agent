@@ -187,8 +187,8 @@ def test_restore_runs_the_installers_store_git_when_path_has_none(checkout, monk
 
     # Every console script (`hermes`, `hermes-agent`, `hermes-acp`) repairs before its entry module imports
     # any other checkout module past hermes_bootstrap: any of them may be a half-written file.
-    repo = os.path.realpath(Path(er.__file__).parent.parent)
-    for entry in ("hermes_cli.main", "hermes_agent.agent.legacy_cli", "hermes_agent.run_agent", "hermes_agent.acp_adapter.entry"):
+    repo = os.path.realpath(Path(er.__file__).parents[2])
+    for entry in ("hermes_agent.hermes_cli.main", "hermes_agent.agent.legacy_cli", "hermes_agent.run_agent", "hermes_agent.acp_adapter.entry"):
         run = subprocess.run([sys.executable, "-c", _ENTRY_SPY, entry], cwd=repo, capture_output=True, text=True,
                              encoding="utf-8", env={**os.environ, "PYTHONPATH": repo}, timeout=120, check=False)
         assert run.stdout.strip().splitlines()[-1:] == ["[]"], (entry, run.stdout[-500:], run.stderr[-2000:])
@@ -297,7 +297,7 @@ def test_concurrent_launches_take_turns_and_all_rerun_from_the_restored_tree(tmp
     marker = er.interrupted_pull_marker(root)
     marker.write_text(f"pid=0\npre={pre}\ntarget={target}\nstash=\n", encoding="utf-8", newline="")
 
-    repo = os.path.realpath(Path(er.__file__).parent.parent)
+    repo = os.path.realpath(Path(er.__file__).parents[2])
     launches = [subprocess.Popen([sys.executable, "-c", _RACER, str(root)], cwd=repo, text=True, encoding="utf-8",
                                  env={**os.environ, "PYTHONPATH": repo}, stdin=subprocess.PIPE,
                                  stdout=subprocess.PIPE, stderr=subprocess.PIPE) for _ in range(3)]
@@ -469,7 +469,7 @@ def test_a_launch_that_cannot_get_the_repair_claim_never_continues_from_the_torn
         launch = subprocess.run(
             [sys.executable, "-c", "import sys; from pathlib import Path; from hermes_agent.hermes_cli import _early_recovery as er; "
              "er._RESTORE_CLAIM_WAIT_SECONDS = 0.2; er.restore_interrupted_pull(Path(sys.argv[1]))", str(root)],
-            cwd=Path(er.__file__).resolve().parent.parent, capture_output=True, text=True, encoding="utf-8",
+            cwd=Path(er.__file__).resolve().parents[2], capture_output=True, text=True, encoding="utf-8",
             timeout=60, check=False)
     finally:
         er._lock_fd(fd, False)
