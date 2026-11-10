@@ -92,7 +92,7 @@ all profile-aware via `get_hermes_home()`.
 ### Facade + siblings layout
 
 Every former god file is a **facade** (public entry points + the names other packages import) plus
-**siblings** `<stem>_<topic>.py`, each owning one topic (`hermes_state.py`, `gateway/run.py`,
+**siblings** `<stem>_<topic>.py`, each owning one topic (`hermes_agent/hermes_state.py`, `gateway/run.py`,
 `tools/mcp_tool.py`, `hermes_cli/kanban.py`, `hermes_cli/web_server.py`, `cli.py` →
 `hermes_cli/cli_*_mixin.py`, `run_agent.py` → `agent/turn_*.py`).
 
