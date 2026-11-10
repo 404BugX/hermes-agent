@@ -16,17 +16,17 @@ import threading
 import time
 
 from agent.thread_scoped_output import thread_scoped_silence
-from tools.registry import tool_error
+from hermes_agent.tools.registry import tool_error
 
 # Logger name kept as the origin module's so existing log expectations hold.
-logger = logging.getLogger("tools.code_execution_tool")
+logger = logging.getLogger("hermes_agent.tools.code_execution_tool")
 
 # Terminal parameters that must not be used from ephemeral sandbox scripts.
 _TERMINAL_BLOCKED_PARAMS = {"background", "pty", "notify", "notify_on_complete", "watch_patterns", "heartbeat", "persist_on_release"}
 
 
 def _default_dispatch(task_id):
-    from model_tools import handle_function_call
+    from hermes_agent.model_tools import handle_function_call
     return lambda tool_name, tool_args: handle_function_call(tool_name, tool_args, task_id=task_id)
 
 

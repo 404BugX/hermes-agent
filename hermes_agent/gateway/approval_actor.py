@@ -1,7 +1,7 @@
 """Who may answer a pending exec approval from a messaging chat.
 
 An approval belongs to the user whose message started the turn that raised it.
-``tools.approval_gateway_wait`` records ``requester_id`` / ``requester_name`` and the
+``hermes_agent.tools.approval_gateway_wait`` records ``requester_id`` / ``requester_name`` and the
 profile's ``approvals.approvers`` on the pending entry (in the turn's profile scope).
 In a shared chat any admitted member sees the Allow/Deny buttons, so every surface
 that resolves an approval from a chat event (button callbacks, reactions, relay prompt
@@ -66,7 +66,7 @@ def answerable_request_ids(session_key: str, actor_id: Any, *, admin_ids: Iterab
     they may not. Only the selected entries are checked, so another requester's queued approval
     never blocks this one. Resolving the returned ids (not "the oldest" again) keeps a refused
     entry that became the oldest in between from being answered unchecked."""
-    from tools.approval import list_gateway_approval_authority
+    from hermes_agent.tools.approval import list_gateway_approval_authority
 
     pending = list_gateway_approval_authority(session_key)
     if request_id:
@@ -100,7 +100,7 @@ def slash_confirm_refusal(session_key: str, confirm_id: str, actor_id: Any, *, a
     """:func:`approval_refusal` for the slash-command confirmation (``/reload-mcp``) a click or typed
     reply would resolve: the same requester / approvers / admins rule, read from the pending confirm.
     Nothing pending (or another confirm id) is never refused: the resolver reports it as before."""
-    from tools.slash_confirm import get_pending
+    from hermes_agent.tools.slash_confirm import get_pending
 
     pending = get_pending(session_key) or {}
     return _authority_refusal(pending.get("authority") if pending.get("confirm_id") == confirm_id else None,
@@ -110,7 +110,7 @@ def slash_confirm_refusal(session_key: str, confirm_id: str, actor_id: Any, *, a
 def clarify_refusal(clarify_id: str, actor_id: Any, *, admin_ids: Iterable[str] = (),
                     extra: Any = None) -> Optional[str]:
     """:func:`approval_refusal` for the agent's clarify question a tap (choice or "Other") answers."""
-    from tools.clarify_gateway import get_pending
+    from hermes_agent.tools.clarify_gateway import get_pending
 
     return _authority_refusal(getattr(get_pending(clarify_id), "authority", None), actor_id, admin_ids, extra)
 

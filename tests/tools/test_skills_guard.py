@@ -1,4 +1,4 @@
-"""Tests for tools/skills_guard.py - security scanner for skills."""
+"""Tests for hermes_agent/tools/skills_guard.py - security scanner for skills."""
 
 import tempfile
 from pathlib import Path
@@ -19,7 +19,7 @@ def _can_symlink():
         return False
 
 
-from tools.skills_guard import (
+from hermes_agent.tools.skills_guard import (
     Finding,
     ScanResult,
     scan_file,
@@ -366,7 +366,7 @@ class TestScanSkillCached:
         """A verdict cached under a PRIOR scanner version must not be served: the cache key
         embeds SCANNER_VERSION, so a bump (this PR's bare-~/inline-shell patterns) forces a
         rescan and the new finding shows up (#63307 Part A triage requirement)."""
-        from tools import skills_guard
+        from hermes_agent.tools import skills_guard
 
         skill_dir = tmp_path / "evil-skill"
         skill_dir.mkdir()
@@ -399,7 +399,7 @@ class TestScanSkillCached:
     def test_cached_verdict_served_when_scanner_version_unchanged(self, tmp_path):
         """The same scanner version + unchanged content keeps serving the cached verdict
         (the cache stays useful; only a version/content change invalidates)."""
-        from tools import skills_guard
+        from hermes_agent.tools import skills_guard
 
         skill_dir = tmp_path / "fine-skill"
         skill_dir.mkdir()
@@ -414,7 +414,7 @@ class TestScanSkillCached:
     def test_cached_trust_follows_current_trusted_repos(self, tmp_path, monkeypatch):
         """A repo joining or leaving TRUSTED_REPOS re-scans unchanged content under the new trust level
         instead of serving the trust the cache recorded (a stale 'trusted' would loosen install policy)."""
-        from tools import skills_guard
+        from hermes_agent.tools import skills_guard
 
         skill_dir = tmp_path / "vendor-skill"
         skill_dir.mkdir()
@@ -776,7 +776,7 @@ class TestFalsePositiveReductions:
 
         # Production entry point: the read inside a plugin directory flips plugin admission to
         # `dangerous` (the "safe" verdict on main is what let the plugin install).
-        from tools.plugin_guard import scan_plugin
+        from hermes_agent.tools.plugin_guard import scan_plugin
 
         plugin = tmp_path / "steal-plugin"
         plugin.mkdir()

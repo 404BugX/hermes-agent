@@ -55,7 +55,7 @@ hardening is ordinary public work. Name the §2 boundary crossed, with a repro o
 
 **Footprint ladder** (take the highest rung that solves it): extend existing code → CLI command +
 skill → service-gated tool (`check_fn` answers reachability/opt-in, never per-session surface:
-`tools/AGENTS.md`) → plugin → MCP server in the catalog → new core tool (fundamental, broadly useful,
+`hermes_agent/tools/AGENTS.md`) → plugin → MCP server in the catalog → new core tool (fundamental, broadly useful,
 unreachable otherwise).
 
 ## Development Environment
@@ -93,7 +93,7 @@ all profile-aware via `get_hermes_home()`.
 
 Every former god file is a **facade** (public entry points + the names other packages import) plus
 **siblings** `<stem>_<topic>.py`, each owning one topic (`hermes_agent/hermes_state.py`, `hermes_agent/gateway/run.py`,
-`tools/mcp_tool.py`, `hermes_cli/kanban.py`, `hermes_cli/web_server.py`, `cli.py` →
+`hermes_agent/tools/mcp_tool.py`, `hermes_cli/kanban.py`, `hermes_cli/web_server.py`, `cli.py` →
 `hermes_cli/cli_*_mixin.py`, `run_agent.py` → `agent/turn_*.py`).
 
 - **Find code by topic:** `grep -rn "def name" <dir>/<stem>_*.py`, not by reading the facade.
@@ -148,7 +148,7 @@ Every former god file is a **facade** (public entry points + the names other pac
 | `cli.py`, `hermes_cli/` | `hermes_cli/AGENTS.md` | CLI mixins, slash registry, config system, skins, `hermes update`, profiles / multiplex |
 | `gateway/` | `hermes_agent/gateway/AGENTS.md` | adapters, message guards, streaming, notifications, token locks, § Profile scope |
 | `hermes_agent/gateway/platforms/` new adapter | `hermes_agent/gateway/platforms/ADDING_A_PLATFORM.md` | step-by-step adapter guide |
-| `tools/`, `toolsets.py`, `model_tools.py` | `tools/AGENTS.md` | adding tools, registry, toolsets, delegation, session-scoped surface tools |
+| `tools/`, `hermes_agent/toolsets.py`, `hermes_agent/model_tools.py` | `hermes_agent/tools/AGENTS.md` | adding tools, registry, toolsets, delegation, session-scoped surface tools |
 | `plugins/`, `hermes_cli/plugins*.py` | `plugins/AGENTS.md` | plugin kinds, native compat contract, in-tree policy, boundary lint |
 | `plugin-catalog/` | `plugin-catalog/README.md` | catalog admission rules (mirrored in the developer guide; keep identical) |
 | `hermes_agent/tui_gateway/`, `ui-tui/` | `hermes_agent/tui_gateway/AGENTS.md` | process model, JSON-RPC transport, slash flow |

@@ -587,7 +587,7 @@ method("groups.peer.register", params=GroupsPeerRegisterParams, result=GroupsPee
 
 
 class RelayAgentRow(Params):
-    """A roster row the Desktop pushes (``tools/bot_relay.py::_normalize_roster_row``); invalid
+    """A roster row the Desktop pushes (``hermes_agent/tools/bot_relay.py::_normalize_roster_row``); invalid
     rows are dropped server-side, so the shape stays open."""
 
     profile: str | None = None
@@ -617,7 +617,7 @@ class BotRelayOutboxDrainParams(ProfileParams):
 
 
 class RelayEnvelope(OpenModel):
-    """``tools/bot_relay.py::enqueue_envelope``."""
+    """``hermes_agent/tools/bot_relay.py::enqueue_envelope``."""
 
     id: str
     created_at: int | float

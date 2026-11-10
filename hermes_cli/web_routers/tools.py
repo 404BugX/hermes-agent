@@ -61,8 +61,8 @@ def _probe_docker_backend(_cfg) -> tuple:
     because Podman has no ServerVersion field and the agent already probes with
     ``version``.
     """
-    from tools.environments.docker import docker_runtime_name, docker_runtime_start_hint, find_docker
-    from tools.environments.remote_common import run_capture
+    from hermes_agent.tools.environments.docker import docker_runtime_name, docker_runtime_start_hint, find_docker
+    from hermes_agent.tools.environments.remote_common import run_capture
 
     docker_exe = find_docker()
     if not docker_exe:
@@ -95,7 +95,7 @@ def _probe_ssh_backend(terminal_cfg: dict) -> tuple:
 
 def _probe_modal_backend(_cfg) -> tuple:
     try:
-        from tools.tool_backend_helpers import has_direct_modal_credentials
+        from hermes_agent.tools.tool_backend_helpers import has_direct_modal_credentials
 
         if has_direct_modal_credentials():
             return ("ready", "")
@@ -227,7 +227,7 @@ async def get_toolsets(profile: Optional[str] = None):
         _toolset_configuration_platform, _toolset_has_keys, get_nous_subscription_features,
         gui_toolset_label)
     from hermes_cli.platforms import platform_label
-    from toolsets import resolve_toolset
+    from hermes_agent.toolsets import resolve_toolset
     from utils import is_truthy_value
 
     def _read():
@@ -402,7 +402,7 @@ async def get_toolset_config(name: str, profile: Optional[str] = None):
                 # or the user's own key (the managed and BYOK Firecrawl rows share one backend name).
                 try:
                     from plugins.web.firecrawl.provider import is_managed_route
-                    from tools.web_tools import _get_extract_backend, _get_search_backend, _managed_web_search
+                    from hermes_agent.tools.web_tools import _get_extract_backend, _get_search_backend, _managed_web_search
 
                     search_backend = _get_search_backend()
                     extract_backend = _get_extract_backend()
@@ -540,7 +540,7 @@ async def select_toolset_provider(
                         raise _bad_request(f"{body.provider} does not support {body.capability}")
                     # The managed row's web_backend names the vendor serving it ("firecrawl"); writing that
                     # would read as the user's OWN Firecrawl key. Its pin is "nous" (gateway route).
-                    from tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
+                    from hermes_agent.tools.tool_backend_helpers import NOUS_MANAGED_PROVIDER
 
                     _dict_section(config, "web")[f"{body.capability}_backend"] = (
                         NOUS_MANAGED_PROVIDER if prov.get("managed_nous_feature") else backend)
@@ -696,8 +696,8 @@ async def select_terminal_backend(
 @router.get("/api/tools/computer-use/status")
 async def get_computer_use_status(profile: Optional[str] = None):
     """Computer Use readiness for the desktop card (payload shape: see
-    ``tools.computer_use.permissions.computer_use_status``)."""
-    from tools.computer_use.permissions import computer_use_status
+    ``hermes_agent.tools.computer_use.permissions.computer_use_status``)."""
+    from hermes_agent.tools.computer_use.permissions import computer_use_status
 
     return await scoped_to_thread(profile, computer_use_status)
 

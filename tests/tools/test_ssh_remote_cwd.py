@@ -10,12 +10,12 @@ from unittest.mock import patch
 
 import pytest
 
-import tools.file_tools_paths as paths
-import tools.file_tools_write_guards as write_guards
-from tools import terminal_tool
-from tools import file_tools
-from tools.file_tools_write_guards import _check_sensitive_path
-from tools.terminal_tool_config import coerce_ssh_remote_cwd
+import hermes_agent.tools.file_tools_paths as paths
+import hermes_agent.tools.file_tools_write_guards as write_guards
+from hermes_agent.tools import terminal_tool
+from hermes_agent.tools import file_tools
+from hermes_agent.tools.file_tools_write_guards import _check_sensitive_path
+from hermes_agent.tools.terminal_tool_config import coerce_ssh_remote_cwd
 
 HOST_HOME = "/opt/data/home"
 

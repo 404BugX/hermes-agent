@@ -1,4 +1,4 @@
-"""Tests for tools/process_registry.py — ProcessRegistry query methods, pruning, checkpoint."""
+"""Tests for hermes_agent/tools/process_registry.py — ProcessRegistry query methods, pruning, checkpoint."""
 
 import json
 import os
@@ -12,8 +12,8 @@ import time
 import pytest
 from unittest.mock import MagicMock, patch
 
-from tools.environments.local_env_policy import _HERMES_PROVIDER_ENV_FORCE_PREFIX
-from tools.process_registry import (
+from hermes_agent.tools.environments.local_env_policy import _HERMES_PROVIDER_ENV_FORCE_PREFIX
+from hermes_agent.tools.process_registry import (
     ProcessRegistry,
     ProcessSession,
     FINISHED_TTL_SECONDS,
@@ -35,7 +35,7 @@ def _reset_systemd_scope_cache():
     ``INVOCATION_ID`` is set) doesn't leak into tests that mock
     ``subprocess.Popen``. Tests that exercise the probe directly reset the
     cache themselves."""
-    import tools.process_registry as _pr
+    import hermes_agent.tools.process_registry as _pr
 
     original = _pr._SYSTEMD_SCOPE_AVAILABLE
     _pr._SYSTEMD_SCOPE_AVAILABLE = False
@@ -893,7 +893,7 @@ class TestSpawnEnvSanitization:
             "TELEGRAM_BOT_TOKEN": "bot-secret",
             "FIRECRAWL_API_KEY": "fc-secret",
         }, clear=True), \
-            patch("tools.process_registry._find_shell", return_value="/bin/bash"), \
+            patch("hermes_agent.tools.process_registry._find_shell", return_value="/bin/bash"), \
             patch("subprocess.Popen", side_effect=fake_popen), \
             patch("threading.Thread", return_value=fake_thread), \
             patch.object(registry, "_write_checkpoint"):
@@ -926,7 +926,7 @@ class TestSpawnEnvSanitization:
         env = FakeEnv()
         fake_thread = MagicMock()
 
-        with patch("tools.process_registry.threading.Thread", return_value=fake_thread), \
+        with patch("hermes_agent.tools.process_registry.threading.Thread", return_value=fake_thread), \
             patch.object(registry, "_write_checkpoint"):
             with pytest.raises(RuntimeError, match="exited 2 without a PID: syntax error"):
                 registry.spawn_via_env(env, "echo hello")
@@ -954,7 +954,7 @@ class TestSpawnEnvSanitization:
 
         env = FakeEnv()
 
-        with patch("tools.process_registry.time.sleep", return_value=None), \
+        with patch("hermes_agent.tools.process_registry.time.sleep", return_value=None), \
             patch.object(registry, "_move_to_finished"):
             registry._env_poller_loop(
                 session,
@@ -992,7 +992,7 @@ class TestEnvPollerIncrementalRead:
                 return next(self._responses)
 
         env = FakeEnv()
-        with patch("tools.process_registry.time.sleep", return_value=None), \
+        with patch("hermes_agent.tools.process_registry.time.sleep", return_value=None), \
             patch.object(registry, "_move_to_finished"):
             registry._env_poller_loop(
                 session, env, "/tmp/bg.log", "/tmp/bg.pid", "/tmp/bg.exit"
@@ -1137,7 +1137,7 @@ class TestPopenLeakOnSetupFailure:
         # The orphan path terminates through _terminate_host_pid, which
         # revalidates the recorded kernel start time before signalling, so a
         # MagicMock pid can never reach a real killpg/os.kill.
-        with patch("tools.process_registry._find_shell", return_value="/bin/bash"), \
+        with patch("hermes_agent.tools.process_registry._find_shell", return_value="/bin/bash"), \
              patch("subprocess.Popen", return_value=proc), \
              patch("threading.Thread", side_effect=boom), \
              patch.object(ProcessRegistry, "_terminate_host_pid") as terminate, \
@@ -1176,7 +1176,7 @@ class TestSpawnRewriteCompoundBackground:
         fake_thread = MagicMock()
         fake_thread.daemon = False
 
-        with patch("tools.process_registry._find_shell", return_value="/bin/bash"), \
+        with patch("hermes_agent.tools.process_registry._find_shell", return_value="/bin/bash"), \
              patch("subprocess.Popen", side_effect=fake_popen), \
              patch("threading.Thread", return_value=fake_thread), \
              patch.object(registry, "_write_checkpoint"):
@@ -1198,7 +1198,7 @@ class TestSpawnRewriteCompoundBackground:
         fake_thread = MagicMock()
         fake_thread.daemon = False
 
-        with patch("tools.process_registry._find_shell", return_value="/bin/bash"), \
+        with patch("hermes_agent.tools.process_registry._find_shell", return_value="/bin/bash"), \
              patch.dict("sys.modules", {"ptyprocess": mock_pty_module}), \
              patch("threading.Thread", return_value=fake_thread), \
              patch.object(registry, "_write_checkpoint"):
@@ -1229,7 +1229,7 @@ class TestCheckpoint:
             "pid": 999999999,  # almost certainly not running
             "task_id": "t1",
         }]))
-        with patch("tools.process_registry.CHECKPOINT_PATH", checkpoint):
+        with patch("hermes_agent.tools.process_registry.CHECKPOINT_PATH", checkpoint):
             recovered = registry.recover_from_checkpoint()
             assert recovered == 0
 
@@ -1249,8 +1249,8 @@ class TestCheckpoint:
         monkeypatch.setattr(registry, "_host_pid_is_ours", lambda *_args: False)
         monkeypatch.setattr(registry, "_is_host_pid_alive", lambda *_args: False)
 
-        with patch("tools.process_registry.CHECKPOINT_PATH", checkpoint), patch(
-            "tools.process_registry._stop_systemd_unit", return_value=False
+        with patch("hermes_agent.tools.process_registry.CHECKPOINT_PATH", checkpoint), patch(
+            "hermes_agent.tools.process_registry._stop_systemd_unit", return_value=False
         ) as stop_unit:
             assert registry.recover_from_checkpoint() == 0
 
@@ -1273,8 +1273,8 @@ class TestCheckpoint:
         monkeypatch.setattr(registry, "_host_pid_is_ours", lambda *_args: False)
         monkeypatch.setattr(registry, "_is_host_pid_alive", lambda *_args: False)
 
-        with patch("tools.process_registry.CHECKPOINT_PATH", checkpoint), patch(
-            "tools.process_registry._stop_systemd_unit", return_value=True
+        with patch("hermes_agent.tools.process_registry.CHECKPOINT_PATH", checkpoint), patch(
+            "hermes_agent.tools.process_registry._stop_systemd_unit", return_value=True
         ) as stop_unit:
             assert registry.recover_from_checkpoint() == 0
 
@@ -1293,7 +1293,7 @@ class TestCheckpoint:
         }]
         checkpoint.write_text(json.dumps(original))
 
-        with patch("tools.process_registry.CHECKPOINT_PATH", checkpoint):
+        with patch("hermes_agent.tools.process_registry.CHECKPOINT_PATH", checkpoint):
             recovered = registry.recover_from_checkpoint()
             assert recovered == 0
             assert registry.get("proc_remote") is None
@@ -1307,7 +1307,7 @@ class TestCheckpoint:
         redacted before write. Recovery only uses command for display/logging
         (the process is already running), so masking is lossless."""
         checkpoint = tmp_path / "procs.json"
-        with patch("tools.process_registry.CHECKPOINT_PATH", checkpoint):
+        with patch("hermes_agent.tools.process_registry.CHECKPOINT_PATH", checkpoint):
             secret = "sk-secret1234567890"
             command = f"curl -H 'Authorization: Bearer {secret}' http://x"
             s = _make_session(sid="proc_secret", command=command)
@@ -1411,7 +1411,7 @@ class TestKillProcess:
                 side_effect=reader_wins_during_signal,
             )
             saver = patch(
-                "tools.process_registry.save_completed_result", side_effect=record_save
+                "hermes_agent.tools.process_registry.save_completed_result", side_effect=record_save
             )
             with host_guard, term_patch, saver:
                 result = registry.kill_process(s.id)
@@ -1434,7 +1434,7 @@ class TestKillProcess:
 
 class TestProcessToolHandler:
     def test_unknown_action(self):
-        from tools.process_registry import _handle_process
+        from hermes_agent.tools.process_registry import _handle_process
         result = json.loads(_handle_process({"action": "unknown_action"}))
         assert "error" in result
 
@@ -1443,7 +1443,7 @@ class TestProcessToolHandler:
 # format_process_notification + drain_notifications (shared helpers)
 # =========================================================================
 
-from tools.process_registry_notifications import format_process_notification
+from hermes_agent.tools.process_registry_notifications import format_process_notification
 
 
 def test_drain_notifications_completion_callback_exception_fails_closed(registry):
@@ -1476,7 +1476,7 @@ def test_drain_notifications_filters_async_delegation_by_session_key():
     Regression test for issue #58684: background delegation results delivered
     to the wrong session when the user switches sessions while a subagent runs.
     """
-    from tools.process_registry import process_registry
+    from hermes_agent.tools.process_registry import process_registry
 
     # Clear the queue first
     while not process_registry.completion_queue.empty():
@@ -1532,7 +1532,7 @@ def test_drain_notifications_owns_event_callback_beats_key_equality():
     """The positive-proof ownership callback consumes ONLY approved events —
     including across a compression rotation where bare key equality would
     wrongly re-queue the session's own pre-compression dispatch (#55578)."""
-    from tools.process_registry import process_registry
+    from hermes_agent.tools.process_registry import process_registry
 
     while not process_registry.completion_queue.empty():
         process_registry.completion_queue.get_nowait()
@@ -1593,7 +1593,7 @@ class TestTerminateHostPidWindows:
         here — with a faked ``_IS_WINDOWS`` the argv was asserted against a
         binary that could never have run.
         """
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
 
         captured = {}
 
@@ -1616,7 +1616,7 @@ class TestTerminateHostPidPosix:
     """POSIX branch gives a managed parent its shutdown window first."""
 
     def test_posix_terminates_parent_before_snapshot_descendants(self, monkeypatch):
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
         import psutil
 
         terminate_order = []
@@ -1693,7 +1693,7 @@ class TestTerminateHostPidPosix:
             parent.wait()
 
     def test_posix_oserror_falls_back_to_os_kill(self, monkeypatch):
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
         import psutil
 
         def boom(pid):
@@ -1906,7 +1906,7 @@ class TestHandleProcessRedaction:
     def _setup(self, monkeypatch, command, output):
         import agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
         reg = ProcessRegistry()
         sess = _make_session(sid="proc_redact1", command=command)
         sess.output_buffer = output
@@ -1956,7 +1956,7 @@ class TestHandleProcessRedaction:
     def test_disabled_passes_through(self, monkeypatch):
         import agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", False)
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
         reg = ProcessRegistry()
         sess = _make_session(sid="proc_redact2", command="printenv")
         sess.output_buffer = "CUSTOM_TOKEN=zzzopaque1234567890abcdef"
@@ -1977,7 +1977,7 @@ class TestHandleProcessTransformHook:
         import agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
         monkeypatch.setattr("hermes_cli.lifecycle.invoke_hook", hook)
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
         reg = ProcessRegistry()
         sess = _make_session(sid="proc_xform1", command="python app.py")
         sess.output_buffer = output
@@ -2165,9 +2165,9 @@ class TestSystemdCgroupIsolation:
         wrapped in ``systemd-run --user --scope --unit=hermes-worker-<id>``."""
         fake_popen, captured = self._fake_popen_capture()
 
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr(
@@ -2230,9 +2230,9 @@ class TestSystemdCgroupIsolation:
         cgroup)."""
         fake_popen, captured = self._fake_popen_capture()
 
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: False,
         )
         monkeypatch.setattr(
@@ -2257,9 +2257,9 @@ class TestSystemdCgroupIsolation:
         systemd-run is available — isolation is a gateway concern."""
         fake_popen, captured = self._fake_popen_capture()
 
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr(
@@ -2289,9 +2289,9 @@ class TestSystemdCgroupIsolation:
         """
         monkeypatch.setenv("INVOCATION_ID", "herdr-service-inherited-marker")
         monkeypatch.delenv("_HERMES_GATEWAY", raising=False)
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
@@ -2340,9 +2340,9 @@ class TestSystemdCgroupIsolation:
             "hermes_agent.gateway.status.get_running_pid",
             lambda *, cleanup_stale=False: os.getpid() + 1,
         )
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
@@ -2383,9 +2383,9 @@ class TestSystemdCgroupIsolation:
         fake_popen, _captured = self._fake_popen_capture()
         fake_proc = fake_popen(["placeholder"])
 
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr(
@@ -2399,7 +2399,7 @@ class TestSystemdCgroupIsolation:
 
         with patch("subprocess.Popen", return_value=fake_proc), \
             patch("threading.Thread", return_value=broken_reader), \
-            patch("tools.process_registry._stop_systemd_unit", return_value=True) as stop_unit, \
+            patch("hermes_agent.tools.process_registry._stop_systemd_unit", return_value=True) as stop_unit, \
             patch("os.killpg") as killpg, \
             patch.object(registry, "_write_checkpoint"):
             with pytest.raises(RuntimeError, match="reader failed"):
@@ -2418,9 +2418,9 @@ class TestSystemdCgroupIsolation:
         fake_pty = MagicMock()
         fake_pty.pid = 4321
 
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr(
@@ -2468,9 +2468,9 @@ class TestSystemdCgroupIsolation:
             events.append(("pty", None))
             raise RuntimeError("PTY wrapper failed after scope creation")
 
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr(
@@ -2481,7 +2481,7 @@ class TestSystemdCgroupIsolation:
 
         with patch.object(PtyProcess, "spawn", side_effect=fail_pty), \
             patch("subprocess.Popen", side_effect=fake_popen), \
-            patch("tools.process_registry._stop_systemd_unit", side_effect=fake_stop), \
+            patch("hermes_agent.tools.process_registry._stop_systemd_unit", side_effect=fake_stop), \
             patch("threading.Thread", return_value=MagicMock()), \
             patch.object(registry, "_write_checkpoint"):
             session = registry.spawn_local("codex", cwd="/tmp", use_pty=True)
@@ -2505,9 +2505,9 @@ class TestSystemdCgroupIsolation:
         """Do not launch a duplicate command while the failed PTY scope may live."""
         from ptyprocess import PtyProcess
 
-        monkeypatch.setattr("tools.process_registry._find_shell", lambda: "/bin/bash")
+        monkeypatch.setattr("hermes_agent.tools.process_registry._find_shell", lambda: "/bin/bash")
         monkeypatch.setattr(
-            "tools.process_registry._systemd_run_user_scope_available",
+            "hermes_agent.tools.process_registry._systemd_run_user_scope_available",
             lambda: True,
         )
         monkeypatch.setattr(
@@ -2521,7 +2521,7 @@ class TestSystemdCgroupIsolation:
             "spawn",
             side_effect=RuntimeError("PTY wrapper failed after scope creation"),
         ), patch("subprocess.Popen") as pipe_spawn, patch(
-            "tools.process_registry._stop_systemd_unit", return_value=False
+            "hermes_agent.tools.process_registry._stop_systemd_unit", return_value=False
         ) as stop_unit:
             with pytest.raises(RuntimeError, match="could not be reaped"):
                 registry.spawn_local("codex", cwd="/tmp", use_pty=True)
@@ -2530,7 +2530,7 @@ class TestSystemdCgroupIsolation:
         pipe_spawn.assert_not_called()
 
     def test_worker_memory_limit_honors_local_guard_mb_override(self, monkeypatch):
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setenv("TERMINAL_LOCAL_MEMORY_MAX_MB", "123")
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
@@ -2545,7 +2545,7 @@ class TestSystemdCgroupIsolation:
     def test_worker_memory_limit_caps_oversized_local_guard_override(
         self, monkeypatch
     ):
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setenv("TERMINAL_LOCAL_MEMORY_MAX_MB", "999999")
         monkeypatch.setattr(
@@ -2579,7 +2579,7 @@ class TestSystemdCgroupIsolation:
         terminated = []
         monkeypatch.setattr(registry, "_host_pid_is_ours", lambda pid, start: False)
         monkeypatch.setattr(registry, "_terminate_host_pid", lambda pid, start: terminated.append((pid, start)))
-        monkeypatch.setattr("tools.process_registry._stop_systemd_unit", lambda unit: stopped.append(unit) or True)
+        monkeypatch.setattr("hermes_agent.tools.process_registry._stop_systemd_unit", lambda unit: stopped.append(unit) or True)
 
         with patch.object(registry, "_write_checkpoint"):
             result = registry.kill_process(session.id)
@@ -2597,7 +2597,7 @@ class TestSystemdCgroupIsolation:
     ):
         """The availability check probes once and caches — a second call must
         not re-probe (and must return the same value)."""
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         # Reset the cache.
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_AVAILABLE", None)
@@ -2628,7 +2628,7 @@ class TestSystemdCgroupIsolation:
         """systemd >= 254 rewrites ``$$``/``${X}`` in a --scope command unless given
         ``--expand-environment=no``; older systemd-run rejects that option, and losing
         it there must not cost the scope (#132385)."""
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_AVAILABLE", None)
         monkeypatch.setattr(pr, "_SYSTEMD_RUN_NO_EXPAND", True)
@@ -2653,7 +2653,7 @@ class TestSystemdCgroupIsolation:
     @pytest.mark.platforms("linux")
     def test_successful_systemd_probe_revalidates_after_cache_ttl(self, monkeypatch):
         """A vanished user bus invalidates a formerly successful scope verdict."""
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_AVAILABLE", None)
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_PROBED_AT", 0.0)
@@ -2668,7 +2668,7 @@ class TestSystemdCgroupIsolation:
             )
 
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
-        monkeypatch.setattr("tools.process_registry.time.monotonic", lambda: clock[0])
+        monkeypatch.setattr("hermes_agent.tools.process_registry.time.monotonic", lambda: clock[0])
         monkeypatch.setattr("subprocess.run", fake_run)
 
         assert pr._systemd_run_user_scope_available() is True
@@ -2685,7 +2685,7 @@ class TestSystemdCgroupIsolation:
         import socket
         import tempfile
 
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         # Short path: AF_UNIX socket paths are capped at ~104 bytes, longer than most tmp_path values.
         runtime_dir = pr.Path(tempfile.mkdtemp(prefix="hbus-", dir="/tmp"))
@@ -2733,7 +2733,7 @@ class TestSystemdCgroupIsolation:
         import socket
         import tempfile
 
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         runtime_dir = pr.Path(tempfile.mkdtemp(prefix="hbus-", dir="/tmp"))
         runtime_dir.chmod(0o700)
@@ -2766,7 +2766,7 @@ class TestSystemdCgroupIsolation:
     @pytest.mark.platforms("linux")
     def test_probe_succeeds_without_bin_true(self, monkeypatch):
         """An absent ``/bin/true`` must not make a usable scope fail its probe."""
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_AVAILABLE", None)
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_PROBED_AT", 0.0)
@@ -2794,7 +2794,7 @@ class TestSystemdCgroupIsolation:
         A temporary cached ``False`` would let a racing worker spawn inside the
         gateway cgroup, defeating the OOM isolation guarantee.
         """
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_AVAILABLE", None)
         probe_started = threading.Event()
@@ -2837,7 +2837,7 @@ class TestSystemdCgroupIsolation:
 
     @pytest.mark.platforms("linux")
     def test_failed_systemd_probe_retries_after_cache_ttl(self, monkeypatch):
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_AVAILABLE", None)
         monkeypatch.setattr(pr, "_SYSTEMD_SCOPE_PROBED_AT", 0.0, raising=False)
@@ -2852,7 +2852,7 @@ class TestSystemdCgroupIsolation:
             )
 
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemd-run")
-        monkeypatch.setattr("tools.process_registry.time.monotonic", lambda: clock[0])
+        monkeypatch.setattr("hermes_agent.tools.process_registry.time.monotonic", lambda: clock[0])
         monkeypatch.setattr("subprocess.run", fake_run)
 
         assert pr._systemd_run_user_scope_available() is False
@@ -2864,7 +2864,7 @@ class TestSystemdCgroupIsolation:
         assert len(probe_calls) == 2
 
     def test_stop_systemd_unit_treats_absent_unit_as_clean(self, monkeypatch):
-        import tools.process_registry as pr
+        import hermes_agent.tools.process_registry as pr
 
         monkeypatch.setattr("shutil.which", lambda name: "/usr/bin/systemctl")
         monkeypatch.setattr(
@@ -2895,7 +2895,7 @@ class TestNotificationRedaction:
         """_move_to_finished completion notification redacts API keys."""
         import agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
 
         reg = ProcessRegistry()
         sess = _make_session(sid="proc_notif1", command="env")
@@ -2919,7 +2919,7 @@ class TestNotificationRedaction:
         """_check_watch_patterns watch_match notification redacts secrets."""
         import agent.redact as _r
         monkeypatch.setattr(_r, "_REDACT_ENABLED", True)
-        from tools import process_registry as pr
+        from hermes_agent.tools import process_registry as pr
 
         reg = ProcessRegistry()
         sess = _make_session(sid="proc_notif2", command="python server.py")
@@ -3028,7 +3028,7 @@ def _make_delegation_batch_evt(results):
 def _patch_delegation_config(
     monkeypatch, model="upstage/solar-pro-4", provider="openrouter", **over
 ):
-    import tools.process_registry_notifications as _prn
+    import hermes_agent.tools.process_registry_notifications as _prn
 
     cfg = {"model": model, "provider": provider}
     cfg.update(over)

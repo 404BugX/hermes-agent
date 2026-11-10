@@ -258,7 +258,7 @@ def _fs_find_git_root(start: Path) -> str | None:
 def _fs_default_cwd(profile: Optional[str] = None) -> str:
     """The host folder a new session or browser terminal of *profile* starts in: its
     ``terminal.cwd`` when that names a folder, else the home folder."""
-    from tools.terminal_scope import TerminalPolicyUnavailable, build_profile_terminal_scope
+    from hermes_agent.tools.terminal_scope import TerminalPolicyUnavailable, build_profile_terminal_scope
 
     with _profile_scope(profile) as scoped:
         if scoped is None:
