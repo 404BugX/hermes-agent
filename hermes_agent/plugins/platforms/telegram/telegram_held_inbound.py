@@ -10,7 +10,7 @@ from typing import Optional
 from hermes_agent.gateway.platforms.event import MessageEvent
 from hermes_agent.gateway.platforms.helpers import cancel_task
 
-logger = logging.getLogger("plugins.platforms.telegram.adapter")
+logger = logging.getLogger("hermes_agent.plugins.platforms.telegram.adapter")
 
 # Process-wide, so positions stay comparable when a replacement adapter adopts a predecessor's queue.
 _ARRIVALS = itertools.count()

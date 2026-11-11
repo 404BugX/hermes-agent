@@ -131,7 +131,7 @@ Every former god file is a **facade** (public entry points + the names other pac
   helpers.
 - **Don't add core/plugin crossings:** core never imports a specific bundled plugin, and plugins
   use only the published plugin API (`hermes_agent/hermes_cli/data/plugin_api.json`, `ctx`). Existing crossings
-  are baselined; `scripts/boundary_lint.py` fails CI on new ones. Details: `plugins/AGENTS.md`
+  are baselined; `scripts/boundary_lint.py` fails CI on new ones. Details: `hermes_agent/plugins/AGENTS.md`
   § Boundary lint.
 - **Commits and PRs:** rebase onto `main` before merging (a squash from a stale branch silently
   reverts newer fixes); 1–2 invariant tests per fix, proven red on the base.
@@ -149,7 +149,7 @@ Every former god file is a **facade** (public entry points + the names other pac
 | `gateway/` | `hermes_agent/gateway/AGENTS.md` | adapters, message guards, streaming, notifications, token locks, § Profile scope |
 | `hermes_agent/gateway/platforms/` new adapter | `hermes_agent/gateway/platforms/ADDING_A_PLATFORM.md` | step-by-step adapter guide |
 | `tools/`, `hermes_agent/toolsets.py`, `hermes_agent/model_tools.py` | `hermes_agent/tools/AGENTS.md` | adding tools, registry, toolsets, delegation, session-scoped surface tools |
-| `plugins/`, `hermes_agent/hermes_cli/plugins*.py` | `plugins/AGENTS.md` | plugin kinds, native compat contract, in-tree policy, boundary lint |
+| `plugins/`, `hermes_agent/hermes_cli/plugins*.py` | `hermes_agent/plugins/AGENTS.md` | plugin kinds, native compat contract, in-tree policy, boundary lint |
 | `plugin-catalog/` | `plugin-catalog/README.md` | catalog admission rules (mirrored in the developer guide; keep identical) |
 | `hermes_agent/tui_gateway/`, `ui-tui/` | `hermes_agent/tui_gateway/AGENTS.md` | process model, JSON-RPC transport, slash flow |
 | `web/`, `hermes_agent/hermes_cli/web_routers/` | `web/AGENTS.md` | dashboard embeds the real TUI |

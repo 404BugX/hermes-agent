@@ -4,7 +4,7 @@ general request path stays healthy is only visible through ``getWebhookInfo.pend
 import asyncio
 import logging
 
-logger = logging.getLogger("plugins.platforms.telegram.adapter")
+logger = logging.getLogger("hermes_agent.plugins.platforms.telegram.adapter")
 
 
 class TelegramPendingProbeMixin:

@@ -30,7 +30,7 @@ def reply_lost(error: Exception) -> bool:
     a timeout, a 504, a reset after the write, a 5xx answer left after its same-request retries).
     Only a refusal, a flood wait, a connect/pool failure (nothing left) or a local error falls back
     photo by photo."""
-    from plugins.platforms.telegram.telegram_send_errors import may_have_delivered
+    from hermes_agent.plugins.platforms.telegram.telegram_send_errors import may_have_delivered
     return may_have_delivered(error)
 
 
@@ -55,7 +55,7 @@ async def _send_one(adapter: Any, chat_id: str, url: str, alt: Optional[str], me
             return await adapter.send_image_file(chat_id=chat_id, image_path=path, caption=alt or None, metadata=metadata)
         return await adapter.send_image(chat_id=chat_id, image_url=url, caption=alt or None, metadata=metadata)
     except Exception as exc:  # a per-photo failure is reported, never fatal to the batch
-        from plugins.platforms.telegram.adapter import _redact_telegram_error_text
+        from hermes_agent.plugins.platforms.telegram.adapter import _redact_telegram_error_text
         logger.warning("[%s] Photo send failed: %s", adapter.name, _redact_telegram_error_text(exc), exc_info=True)
         return SendResult(success=False, error=_redact_telegram_error_text(exc))
 
@@ -76,7 +76,7 @@ async def _send_each(adapter: Any, chat_id: str, photos: list[tuple], metadata: 
 
 def _open_chunk(adapter: Any, stack: contextlib.ExitStack, chunk: list[tuple], input_media: Any, failed: list):
     """``(media, opened files, (url, alt) sent)`` for one album chunk; unreadable files land in ``failed``."""
-    from plugins.platforms.telegram.adapter import _redact_telegram_error_text as redact
+    from hermes_agent.plugins.platforms.telegram.adapter import _redact_telegram_error_text as redact
     media: list[Any] = []
     opened: list[Any] = []
     sent: list[tuple] = []
@@ -106,8 +106,8 @@ async def _send_chunk(adapter: Any, chat_id: str, media: list, opened: list, met
     """``sendMediaGroup``, the same request again on Telegram's 5xx JSON answer (the text lane's
     budget), plus one retry without a stale forum topic. Returns the metadata the rest of the batch
     should use; raises the send's error."""
-    from plugins.platforms.telegram import telegram_send_errors as kinds
-    from plugins.platforms.telegram.adapter import _redact_telegram_error_text as redact
+    from hermes_agent.plugins.platforms.telegram import telegram_send_errors as kinds
+    from hermes_agent.plugins.platforms.telegram.adapter import _redact_telegram_error_text as redact
 
     def reset() -> None:
         for fh in opened:
@@ -155,7 +155,7 @@ async def send_photo_album(
     ``per_photo_fallback`` is off: the first refused chunk's photos and every later one, in order,
     for the caller to send its own way) and
     ``ambiguous`` (a chunk was sent but never confirmed) whenever any applies."""
-    from plugins.platforms.telegram.adapter import _redact_telegram_error_text as redact
+    from hermes_agent.plugins.platforms.telegram.adapter import _redact_telegram_error_text as redact
     failed: list[tuple[str, str]] = []
     refused: list[tuple] = []
     ambiguous = False

@@ -23,7 +23,7 @@ from hermes_agent.hermes_cli.web_server_memory import (
 )
 from hermes_agent.hermes_cli.web_models import MemoryProviderConfigUpdate, MemoryProviderSetupRequest
 from hermes_agent.hermes_cli.web_routers._common import _CONFIG_MUTATION_LOCK, scoped_to_thread
-from plugins.memory.config_schema import (
+from hermes_agent.plugins.memory.config_schema import (
     STORAGE_FLAT_JSON, STORAGE_PROVIDER, ProviderConfigSchema, ProviderField, get_provider_config_schema,
 )
 

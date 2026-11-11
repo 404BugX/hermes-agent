@@ -15,7 +15,7 @@ tests construct a real ``TelegramAdapter``.
 
 import pytest
 
-from plugins.platforms.telegram.adapter import TelegramAdapter
+from hermes_agent.plugins.platforms.telegram.adapter import TelegramAdapter
 
 
 @pytest.fixture()
