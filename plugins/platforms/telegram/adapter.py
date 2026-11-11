@@ -330,8 +330,7 @@ def check_telegram_requirements() -> bool:
 
 
 from plugins.platforms.telegram.telegram_markdown import degrade_unrenderable_links, escape_rich_currency_dollars, to_markdown_v2
-from plugins.platforms.telegram.rich_markdown import (
-    RICH_EMAIL_TOKEN_RE, escape_literal_hash_prefixes, rich_normalize_linebreaks)
+from plugins.platforms.telegram.rich_markdown import RICH_EMAIL_TOKEN_RE, escape_literal_hash_prefixes, rich_normalize_linebreaks
 from plugins.platforms.telegram.rich_parts import send_rich_parts
 
 
