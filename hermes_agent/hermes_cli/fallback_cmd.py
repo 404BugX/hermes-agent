@@ -7,7 +7,7 @@ from __future__ import annotations
 import copy
 from typing import Any, Dict, List, Optional
 
-from hermes_cli.fallback_config import get_fallback_chain
+from hermes_agent.hermes_cli.fallback_config import get_fallback_chain
 
 # Normalized fallback chain (merges legacy ``fallback_model``); always a fresh copy.
 _read_chain = get_fallback_chain
@@ -49,7 +49,7 @@ def _extract_fallback_from_model_cfg(model_cfg: Any) -> Optional[dict[str, Any]]
 
 def _snapshot_auth_active_provider() -> Any:
     """Return the current ``active_provider`` in auth.json."""
-    from hermes_cli.auth import _auth_store_lock, _load_auth_store
+    from hermes_agent.hermes_cli.auth import _auth_store_lock, _load_auth_store
 
     with _auth_store_lock():
         store = _load_auth_store()
@@ -58,7 +58,7 @@ def _snapshot_auth_active_provider() -> Any:
 
 def _restore_auth_active_provider(value: Any) -> None:
     """Write back a previously snapshotted ``active_provider`` value."""
-    from hermes_cli.auth import _auth_store_lock, _load_auth_store, _save_auth_store
+    from hermes_agent.hermes_cli.auth import _auth_store_lock, _load_auth_store, _save_auth_store
 
     with _auth_store_lock():
         store = _load_auth_store()
@@ -71,7 +71,7 @@ def _restore_auth_active_provider(value: Any) -> None:
 
 def _restore_model_cfg(model_before: Any) -> None:
     """Restore ``config["model"]`` to a previously-captured snapshot."""
-    from hermes_cli.config import load_config, save_config
+    from hermes_agent.hermes_cli.config import load_config, save_config
     cfg = load_config()
     cfg.pop("model", None)
     if model_before is not None:
@@ -106,7 +106,7 @@ def _print_chain(heading: str, chain: list[dict[str, Any]]) -> None:
 
 def _load_chain(empty_message: str):
     """Load config + chain; print ``empty_message`` block and return ``(config, None)`` when empty."""
-    from hermes_cli.config import load_config
+    from hermes_agent.hermes_cli.config import load_config
     config = load_config()
     chain = _read_chain(config)
     if not chain:
@@ -140,8 +140,8 @@ def cmd_fallback_list(args) -> None:
 
 def cmd_fallback_add(args) -> None:
     """Launch the same picker as `hermes model`, then append the selection to the chain."""
-    from hermes_cli.main import _require_tty, select_provider_and_model
-    from hermes_cli.config import load_config, save_config
+    from hermes_agent.hermes_cli.main import _require_tty, select_provider_and_model
+    from hermes_agent.hermes_cli.config import load_config, save_config
     _require_tty("fallback add")
 
     # Snapshot BEFORE the picker runs; both route stores must be restored on every exit path.
@@ -196,13 +196,13 @@ def cmd_fallback_add(args) -> None:
 
 def cmd_fallback_remove(args) -> None:
     """Pick an entry from the chain and remove it."""
-    from hermes_cli.config import save_config
+    from hermes_agent.hermes_cli.config import save_config
     config, chain = _load_chain("  No fallback providers configured — nothing to remove.")
     if chain is None:
         return
 
     # The curses menu owns its own non-TTY guard and numbered fallback; -1 means cancelled.
-    from hermes_cli.setup import _curses_prompt_choice
+    from hermes_agent.hermes_cli.setup import _curses_prompt_choice
     idx = _curses_prompt_choice("Select a fallback to remove:", [_format_entry(e) for e in chain] + ["Cancel"], 0)
     if idx is None or idx < 0 or idx >= len(chain):
         print("\n  Cancelled — no change.")
@@ -216,7 +216,7 @@ def cmd_fallback_remove(args) -> None:
 
 def cmd_fallback_clear(args) -> None:
     """Remove all fallback entries (with confirmation)."""
-    from hermes_cli.config import save_config
+    from hermes_agent.hermes_cli.config import save_config
     config, chain = _load_chain("  No fallback providers configured — nothing to clear.")
     if chain is None:
         return

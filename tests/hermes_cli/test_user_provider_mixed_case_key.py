@@ -61,8 +61,8 @@ def test_gateway_picker_slug_switches_to_the_configured_endpoint(key):
 @pytest.mark.parametrize("requested", ["OpenAI", "openai"])
 def test_cli_model_command_switches_to_the_configured_endpoint(requested):
     """CLI ``/model m1 --provider <key>``: the context the CLI loads, then its switch seam."""
-    from hermes_cli.cli_model_switch_mixin import _switch_model_from
-    from hermes_cli.inventory import load_picker_context
+    from hermes_agent.hermes_cli.cli_model_switch_mixin import _switch_model_from
+    from hermes_agent.hermes_cli.inventory import load_picker_context
 
     _, base_url = _write_config("OpenAI")
     ctx = load_picker_context()
@@ -75,9 +75,9 @@ def test_cli_model_command_switches_to_the_configured_endpoint(requested):
 
 def test_hermes_model_marks_the_configured_mixed_case_provider_active():
     """``hermes model`` opens with the configured ``providers.OpenAI`` row selected, not OpenRouter."""
-    from hermes_cli.config import load_config
-    from hermes_cli.main import _resolve_active_provider
-    from hermes_cli.main_provider_setup import _named_custom_provider_map
+    from hermes_agent.hermes_cli.config import load_config
+    from hermes_agent.hermes_cli.main import _resolve_active_provider
+    from hermes_agent.hermes_cli.main_provider_setup import _named_custom_provider_map
 
     _write_config("OpenAI", provider="OpenAI")
     cfg = load_config()

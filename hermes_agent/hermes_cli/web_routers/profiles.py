@@ -5,7 +5,7 @@ projects/tree, pull-requests) was registered long before the generic
 ``/api/profiles/{name}`` routes on ``router``; the original global registration order is
 preserved rather than relying on Starlette's literal-before-param matching.
 
-Shared helpers are reached via the late-binding seam in :mod:`hermes_cli.web_deps`
+Shared helpers are reached via the late-binding seam in :mod:`hermes_agent.hermes_cli.web_deps`
 so a test's ``monkeypatch.setattr(<owning module>, "_helper", ...)`` keeps working.
 """
 
@@ -13,7 +13,7 @@ import asyncio
 import contextlib
 import copy
 import functools
-from hermes_cli.web_read_coalescing import coalesced_read
+from hermes_agent.hermes_cli.web_read_coalescing import coalesced_read
 import inspect
 import json
 import logging
@@ -28,29 +28,29 @@ from typing import Any, Callable, Dict, List, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException, Query
 
-from hermes_cli.session_listing import subagent_listing_scope
-from hermes_cli.web_deps import late
-from hermes_cli.config import get_process_hermes_home
-from hermes_cli.profiles import ProfileIdentitySettlementPending
-from hermes_cli.web_server_config import (
+from hermes_agent.hermes_cli.session_listing import subagent_listing_scope
+from hermes_agent.hermes_cli.web_deps import late
+from hermes_agent.hermes_cli.config import get_process_hermes_home
+from hermes_agent.hermes_cli.profiles import ProfileIdentitySettlementPending
+from hermes_agent.hermes_cli.web_server_config import (
     _apply_main_model_assignment, _normalize_main_model_assignment, _validated_main_model_selection,
 )
-from hermes_cli.web_server_gateway import _strip_session_list_rows
-from hermes_cli.web_routers._common import _CONFIG_MUTATION_LOCK
-from hermes_cli.web_server_profiles import (
+from hermes_agent.hermes_cli.web_server_gateway import _strip_session_list_rows
+from hermes_agent.hermes_cli.web_routers._common import _CONFIG_MUTATION_LOCK
+from hermes_agent.hermes_cli.web_server_profiles import (
     _fallback_profile_dicts, _hub_action_name, _write_profile_mcp_servers,
 )
-from hermes_cli.web_server_sessions import _open_session_db_at_path
+from hermes_agent.hermes_cli.web_server_sessions import _open_session_db_at_path
 from hermes_agent.hermes_state_health import STORAGE_CORRUPT, note_storage_error, storage_state
 from starlette.concurrency import run_in_threadpool
-from hermes_cli.web_models import (
+from hermes_agent.hermes_cli.web_models import (
     ProfileCreate, ProfileActiveUpdate, ProfileExport, ProfileImport, ProfileRename,
     ProfileSoulUpdate, ProfileDescriptionUpdate, ProfileModelUpdate, ProfileDescribeAuto,
     SessionPrScanBody)
-from hermes_cli.web_server_profiles import _config_profile_scope, _hermes_home_scope
+from hermes_agent.hermes_cli.web_server_profiles import _config_profile_scope, _hermes_home_scope
 
 # Same logger the handlers used before extraction (identical logger object).
-_log = logging.getLogger("hermes_cli.web_server")
+_log = logging.getLogger("hermes_agent.hermes_cli.web_server")
 
 # A per-profile read failure is not an empty session list. The sidebar slice for
 # that profile is a failed load (``failed`` + ``retry``) so Desktop can offer Retry
@@ -72,9 +72,9 @@ sessions_router = APIRouter()
 router = APIRouter()
 
 # Late-bound web_server helpers (resolved at call time; cycle-safe, monkeypatch-transparent).
-_cron_profile_home = late("_cron_profile_home", "hermes_cli.web_server_cron")
-_resolve_profile_dir = late("_resolve_profile_dir", "hermes_cli.web_server_profiles")
-_spawn_hermes_action = late("_spawn_hermes_action", "hermes_cli.web_server_gateway")
+_cron_profile_home = late("_cron_profile_home", "hermes_agent.hermes_cli.web_server_cron")
+_resolve_profile_dir = late("_resolve_profile_dir", "hermes_agent.hermes_cli.web_server_profiles")
+_spawn_hermes_action = late("_spawn_hermes_action", "hermes_agent.hermes_cli.web_server_gateway")
 
 # ---------------------------------------------------------------------------
 # Profile management endpoints (minimal — list/create/rename/delete + SOUL.md)
@@ -138,8 +138,8 @@ def _write_profile_model(profile_dir: Path, provider: str, model: str, validate_
 
     ``base_url`` is the endpoint a bare ``custom``/``local`` pick binds to (a fresh profile's config
     names none); other providers ignore it."""
-    from hermes_cli.config import load_config, save_config
-    from hermes_cli.config_backend import refusing_locked_omissions
+    from hermes_agent.hermes_cli.config import load_config, save_config
+    from hermes_agent.hermes_cli.config_backend import refusing_locked_omissions
     with _config_profile_scope(_scope_profile_name(validate_in or profile_dir)):
         provider, model = _normalize_main_model_assignment(provider, model)
         result = _validated_main_model_selection(load_config(), provider, model, base_url)
@@ -155,8 +155,8 @@ def _disable_unselected_skills(profile_dir: Path, keep: list[str]) -> int:
     newly disabled. Profiles manage activation via a *disabled* list (everything installed is
     active by default); the builder's skill step has "replace" semantics. Hub skills are
     installed separately via subprocess and are active on install."""
-    from hermes_cli.config import load_config
-    from hermes_cli.skills_config import get_disabled_skills, save_disabled_skills
+    from hermes_agent.hermes_cli.config import load_config
+    from hermes_agent.hermes_cli.skills_config import get_disabled_skills, save_disabled_skills
     keep_set = {s.strip() for s in keep if s and s.strip()}
     with _hermes_home_scope(profile_dir), _CONFIG_MUTATION_LOCK:  # RMW span
         skills_root = profile_dir / "skills"
@@ -181,7 +181,7 @@ _MISSING = object()
 @contextlib.contextmanager
 def _profile_errors(log_msg: str, *args, not_found=(FileNotFoundError,),
                     bad_request=(ValueError,)):
-    """Map hermes_cli.profiles exceptions to HTTP: ``not_found`` -> 404, ``bad_request`` -> 400
+    """Map hermes_agent.hermes_cli.profiles exceptions to HTTP: ``not_found`` -> 404, ``bad_request`` -> 400
     (in that order), anything else is logged with ``log_msg`` -> 500. HTTPException passes, and so
     does ``ProfileIdentitySettlementPending`` — a typed partial success the calling endpoint (the
     delete route) owns; it must not flatten into the generic 500."""
@@ -223,7 +223,7 @@ def _profile_targets(log_label: str) -> list[tuple[str, Path]]:
     ``profiles_to_serve`` (pure directory read) instead of ``list_profiles``, which parses
     config/meta and probes gateways per profile — every caller here is a polled sidebar
     fan-out that only needs name/path (#114041)."""
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     try:
         targets = list(profiles_mod.profiles_to_serve(multiplex=True, include_standalone=True, include_parked=True))
     except Exception:
@@ -796,7 +796,7 @@ def post_profiles_sessions_pull_requests(body: SessionPrScanBody, profile: Optio
 
 @functools.partial(coalesced_read, thread_runner=lambda func: run_in_threadpool(func))
 def _read_profiles():
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     try:
         # Polled by the Desktop on every focus/roster tick: never walk skill trees in-request.
         profiles = profiles_mod.list_profiles(lazy_skill_count=True)
@@ -813,7 +813,7 @@ async def list_profiles_endpoint():
 
 @router.post("/api/profiles")
 async def create_profile_endpoint(body: ProfileCreate):
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     explicit_source = (body.clone_from or "").strip()
     if explicit_source:
         # Clone config/skills/SOUL (or full state when clone_all) from the named source.
@@ -891,7 +891,7 @@ async def create_profile_endpoint(body: ProfileCreate):
 async def get_active_profile_endpoint():
     """``active`` is the sticky default written by ``hermes profile use`` (what new CLI
     invocations pick up); ``current`` is the profile this running dashboard is scoped to."""
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
 
     def _run():
         # Both reads touch the filesystem; one hop so sidebar polling costs one round-trip.
@@ -912,7 +912,7 @@ async def get_active_profile_endpoint():
 async def set_active_profile_endpoint(body: ProfileActiveUpdate):
     """Set the sticky active profile (mirrors ``hermes profile use``); does not retarget the
     running dashboard, only subsequent CLI commands and gateways."""
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     with _profile_errors("POST /api/profiles/active failed"):
         # Stats the target, creates the state directory, writes via temp file + replace.
         await run_in_threadpool(profiles_mod.set_active_profile, body.name)
@@ -964,7 +964,7 @@ async def open_profile_terminal_endpoint(name: str):
 
 @router.patch("/api/profiles/{name}")
 async def rename_profile_endpoint(name: str, body: ProfileRename):
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     with _profile_errors("PATCH /api/profiles/%s failed", name,
                          bad_request=(ValueError, FileExistsError)):
         # Stops a running gateway (10 s poll), renames the directory, lets the profile's memory
@@ -990,7 +990,7 @@ async def delete_profile_endpoint(name: str):
     and the retry command: the profile directory is already gone, and folding that state into
     the generic 500 made a dashboard client read a completed delete as a failure (its retry
     then 404'd)."""
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     try:
         with _profile_errors("DELETE /api/profiles/%s failed", name):
             # Polls a running gateway's PID for up to 10 s, then rmtree()s the directory; on the
@@ -1043,7 +1043,7 @@ async def update_profile_soul(name: str, body: ProfileSoulUpdate):
 async def update_profile_description_endpoint(name: str, body: ProfileDescriptionUpdate):
     """Set or clear a profile's role description (kanban routing signal), stored as
     user-authored (``description_auto: false``) so the auto-describer won't overwrite it."""
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     profile_dir = _resolve_profile_dir(name)
     text = (body.description or "").strip()
     with _profile_errors("PUT /api/profiles/%s/description failed", name,
@@ -1077,7 +1077,7 @@ async def describe_profile_auto_endpoint(name: str, body: ProfileDescribeAuto):
     _resolve_profile_dir(name)
 
     def _run():
-        from hermes_cli import profile_describer
+        from hermes_agent.hermes_cli import profile_describer
         return profile_describer.describe_profile(name, overwrite=bool(body.overwrite))
 
     with _profile_errors("POST /api/profiles/%s/describe-auto failed", name,
@@ -1101,7 +1101,7 @@ def _read_desktop_overlay(profile_dir: Path) -> Any:
 
 @router.post("/api/profiles/{name}/export")
 async def export_profile_endpoint(name: str, body: ProfileExport):
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     output = (body.output or "").strip()
     if not output:
         try:
@@ -1119,7 +1119,7 @@ async def export_profile_endpoint(name: str, body: ProfileExport):
 
 @router.post("/api/profiles/import")
 async def import_profile_endpoint(body: ProfileImport):
-    from hermes_cli import profiles as profiles_mod
+    from hermes_agent.hermes_cli import profiles as profiles_mod
     archive = (body.archive or "").strip()
     if not archive:
         raise HTTPException(status_code=400, detail="archive path is required")

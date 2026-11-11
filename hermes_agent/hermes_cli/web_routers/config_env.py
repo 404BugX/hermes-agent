@@ -1,6 +1,6 @@
 """Config, env var and provider custom-endpoint dashboard routes.
 
-Extracted from ``hermes_cli.web_server``; helpers/state that tests monkeypatch on
+Extracted from ``hermes_agent.hermes_cli.web_server``; helpers/state that tests monkeypatch on
 ``web_server`` stay there and are late-bound (cycle-safe).
 """
 
@@ -11,39 +11,39 @@ import asyncio
 import time
 import urllib.parse
 from fastapi import APIRouter
-from hermes_cli.web_routers._common import (
+from hermes_agent.hermes_cli.web_routers._common import (
     REDACTED_CREDENTIAL_WRITE_DETAIL, config_scoped_to_thread, http_failure,
     is_redacted_credential_preview, redacted_credential_preview, scoped_to_thread,
 )
-from hermes_cli.config_backend import refusing_locked_omissions
-from hermes_cli.web_deps import LateState, late
-from hermes_cli.web_server_config import (
+from hermes_agent.hermes_cli.config_backend import refusing_locked_omissions
+from hermes_agent.hermes_cli.web_deps import LateState, late
+from hermes_agent.hermes_cli.web_server_config import (
     _apply_main_model_assignment, _denormalize_config_from_web, drop_model_key, _normalize_config_for_web, _schema_with_dynamic_provider_options,
     _validated_main_model_selection,
 )
-from hermes_cli.web_server_profiles import (
+from hermes_agent.hermes_cli.web_server_profiles import (
     _approval_mode_of, _broadcast_gateway_session_info, _is_other_profile, _parse_model_entries,
 )
 from fastapi import HTTPException, Request
-from hermes_cli.config import DEFAULT_CONFIG, OPTIONAL_ENV_VARS, read_raw_config, require_readable_config_before_write, custom_endpoint_key_env, coerce_provider_id, find_provider_entry, get_compatible_custom_providers, _ENV_REF_RE, _deep_merge
-from hermes_cli.config_providers import _canonical_api_mode, _custom_provider_entry_to_provider_config
-from hermes_cli.web_models import ConfigUpdate, EnvVarUpdate, EnvVarDelete, EnvVarReveal, CustomEndpointUpdate
+from hermes_agent.hermes_cli.config import DEFAULT_CONFIG, OPTIONAL_ENV_VARS, read_raw_config, require_readable_config_before_write, custom_endpoint_key_env, coerce_provider_id, find_provider_entry, get_compatible_custom_providers, _ENV_REF_RE, _deep_merge
+from hermes_agent.hermes_cli.config_providers import _canonical_api_mode, _custom_provider_entry_to_provider_config
+from hermes_agent.hermes_cli.web_models import ConfigUpdate, EnvVarUpdate, EnvVarDelete, EnvVarReveal, CustomEndpointUpdate
 from typing import Any, Dict, List, Optional, Tuple
 
-_log = logging.getLogger("hermes_cli.web_server")
+_log = logging.getLogger("hermes_agent.hermes_cli.web_server")
 config_router = APIRouter()
 router = APIRouter()
 
 # Late-bound so a test's monkeypatch on the owning module wins at call time.
-_channel_managed_env_keys = late("_channel_managed_env_keys", "hermes_cli.web_server_messaging")
-_config_profile_scope = late("_config_profile_scope", "hermes_cli.web_server_profiles")
-_profile_scope = late("_profile_scope", "hermes_cli.web_server_profiles")
+_channel_managed_env_keys = late("_channel_managed_env_keys", "hermes_agent.hermes_cli.web_server_messaging")
+_config_profile_scope = late("_config_profile_scope", "hermes_agent.hermes_cli.web_server_profiles")
+_profile_scope = late("_profile_scope", "hermes_agent.hermes_cli.web_server_profiles")
 _require_token = late("_require_token")
-load_config = late("load_config", "hermes_cli.config")
-load_env = late("load_env", "hermes_cli.config")
-remove_env_value = late("remove_env_value", "hermes_cli.config")
-save_config = late("save_config", "hermes_cli.config")
-save_env_value = late("save_env_value", "hermes_cli.config")
+load_config = late("load_config", "hermes_agent.hermes_cli.config")
+load_env = late("load_env", "hermes_agent.hermes_cli.config")
+remove_env_value = late("remove_env_value", "hermes_agent.hermes_cli.config")
+save_config = late("save_config", "hermes_agent.hermes_cli.config")
+save_env_value = late("save_env_value", "hermes_agent.hermes_cli.config")
 _CONFIG_MUTATION_LOCK = LateState("_CONFIG_MUTATION_LOCK")
 
 # Simple rate limiter for the reveal endpoint
@@ -113,7 +113,7 @@ async def get_schema(profile: Optional[str] = None):
 @config_router.get("/api/egress/status")
 async def get_egress_status(profile: Optional[str] = None):
     """Dashboard/Desktop-readable egress proxy status and remediation text."""
-    from hermes_cli.proxy_cli import format_status_text
+    from hermes_agent.hermes_cli.proxy_cli import format_status_text
     # Reads the profile's ``proxy:`` config block from disk; on the event loop
     # that read stalled every other dashboard request for its duration.
     return {"text": await config_scoped_to_thread(profile, format_status_text)}
@@ -189,7 +189,7 @@ def _catalog_provider_env_metadata() -> dict:
     supplies membership + grouping + fallbacks.
     """
     try:
-        from hermes_cli.provider_catalog import provider_catalog
+        from hermes_agent.hermes_cli.provider_catalog import provider_catalog
     except Exception:
         return {}
 
@@ -345,9 +345,9 @@ async def set_env_var(body: EnvVarUpdate, profile: Optional[str] = None):
 
 def _save_env_credential(key: str, value: str, provider_setup: bool = False) -> Any:
     """Save under the request's profile scope; a new provider API key also counts as a provider setup."""
-    from hermes_cli.config import load_env
-    from hermes_cli.credential_lifecycle import save_provider_env_credential
-    from hermes_cli.observability.shared_metrics_setup import record_api_key_saved, web_setup_surface
+    from hermes_agent.hermes_cli.config import load_env
+    from hermes_agent.hermes_cli.credential_lifecycle import save_provider_env_credential
+    from hermes_agent.hermes_cli.observability.shared_metrics_setup import record_api_key_saved, web_setup_surface
 
     previous = load_env().get(key)
     result = save_provider_env_credential(key, value)
@@ -607,7 +607,7 @@ def _write_custom_endpoint(cfg: dict[str, Any], body: CustomEndpointUpdate) -> t
         # Settings saves the row the list rendered. A legacy custom_providers
         # entry is not in providers, so resolving only there forked a keyless
         # twin and left the list row (and its key_env) behind.
-        from hermes_cli.config_providers import _custom_provider_entry_to_provider_config
+        from hermes_agent.hermes_cli.config_providers import _custom_provider_entry_to_provider_config
 
         legacy = _pop_legacy_custom_provider(cfg, endpoint_id)
         converted = (
@@ -776,7 +776,7 @@ def upsert_custom_endpoint(body: CustomEndpointUpdate, profile: Optional[str] = 
 
 def _record_custom_endpoint_setup(home: Any) -> None:
     """Counted after the config lock is released (a cold metrics runtime must not stall writers)."""
-    from hermes_cli.observability.shared_metrics_setup import record_provider_setup_done, web_setup_surface
+    from hermes_agent.hermes_cli.observability.shared_metrics_setup import record_provider_setup_done, web_setup_surface
 
     record_provider_setup_done(web_setup_surface(), "custom", hermes_home=home, background=True)
 
@@ -967,7 +967,7 @@ _TRANSPORT_LABELS = {"chat_completions": "Chat Completions", "codex_responses": 
 def _auto_api_mode(base_url: str) -> str:
     """The transport the runtime falls back to for an endpoint without a pinned ``api_mode``
     (same resolver as ``runtime_provider_custom._custom_runtime``)."""
-    from hermes_cli.runtime_provider import _detect_api_mode_for_url
+    from hermes_agent.hermes_cli.runtime_provider import _detect_api_mode_for_url
     return _detect_api_mode_for_url(base_url) or "chat_completions"
 
 
@@ -1085,7 +1085,7 @@ async def remove_env_var(body: EnvVarDelete, profile: Optional[str] = None):
     # model-cache rows, and value-matched config.yaml api_key mirrors.
     # OAuth/device-code/manual pool entries for the same provider are preserved.
     with _env_write_errors("DELETE /api/env failed"):
-        from hermes_cli.credential_lifecycle import remove_provider_env_credential
+        from hermes_agent.hermes_cli.credential_lifecycle import remove_provider_env_credential
 
         result = await scoped_to_thread(
             body.profile or profile, lambda: remove_provider_env_credential(body.key)

@@ -7,23 +7,23 @@ from dataclasses import replace
 from fastapi import HTTPException
 from typing import Any, Dict, List, Optional, Tuple, TYPE_CHECKING
 from hermes_agent.agent.model_metadata import is_local_endpoint
-from hermes_cli.config import (
+from hermes_agent.hermes_cli.config import (
     DEFAULT_CONFIG,
     cfg_get,
     clear_model_endpoint_credentials,
     find_provider_entry,
     read_raw_config,
 )
-from hermes_cli.config_backend import refusing_locked_omissions
-from hermes_cli.web_server_memory import _normalize_memory_provider_name
+from hermes_agent.hermes_cli.config_backend import refusing_locked_omissions
+from hermes_agent.hermes_cli.web_server_memory import _normalize_memory_provider_name
 from hermes_agent.tools.transcription_common import STT_MODEL_CATALOG
 from hermes_agent.tools.wake_word import _PROVIDER_PREFERENCE
 
 if TYPE_CHECKING:
-    from hermes_cli.model_switch import ModelSwitchResult
+    from hermes_agent.hermes_cli.model_switch import ModelSwitchResult
 
 # Same logger the code used before extraction (record parity).
-_log = logging.getLogger("hermes_cli.web_server")
+_log = logging.getLogger("hermes_agent.hermes_cli.web_server")
 
 
 # ---------------------------------------------------------------------------
@@ -373,8 +373,8 @@ def _schema_with_dynamic_provider_options() -> dict[str, dict[str, Any]]:
     that reads the schema. ``CONFIG_SCHEMA`` is never mutated; changed entries are
     shallow-copied onto a copied mapping.
     """
-    from hermes_cli.web_server_profiles import _plugin_terminal_backend_rows
-    from hermes_cli.config import load_config
+    from hermes_agent.hermes_cli.web_server_profiles import _plugin_terminal_backend_rows
+    from hermes_agent.hermes_cli.config import load_config
     try:
         cfg = load_config()
     except Exception:  # pragma: no cover - schema must survive config errors
@@ -424,11 +424,11 @@ def _normalize_main_model_assignment(provider: str, model: str) -> tuple[str, st
     2. Model-format normalization for the resolved provider via
        ``normalize_model_for_provider`` (custom/user providers keep the model verbatim).
     """
-    from hermes_cli.config import load_config
-    from hermes_cli.config import get_compatible_custom_providers
-    from hermes_cli.models import _AGGREGATOR_PROVIDERS, _KNOWN_PROVIDER_NAMES, normalize_provider
-    from hermes_cli.model_normalize import normalize_model_for_provider
-    from hermes_cli.providers import resolve_custom_provider, resolve_user_provider
+    from hermes_agent.hermes_cli.config import load_config
+    from hermes_agent.hermes_cli.config import get_compatible_custom_providers
+    from hermes_agent.hermes_cli.models import _AGGREGATOR_PROVIDERS, _KNOWN_PROVIDER_NAMES, normalize_provider
+    from hermes_agent.hermes_cli.model_normalize import normalize_model_for_provider
+    from hermes_agent.hermes_cli.providers import resolve_custom_provider, resolve_user_provider
 
     prov_in = (provider or "").strip()
     model_in = (model or "").strip()
@@ -460,7 +460,7 @@ def _normalize_main_model_assignment(provider: str, model: str) -> tuple[str, st
             canonical = normalize_provider(cur_provider)
             prov_in = cur_provider
         else:
-            from hermes_cli.models_detect import provider_has_credentials
+            from hermes_agent.hermes_cli.models_detect import provider_has_credentials
 
             # Only guess OpenRouter when the user actually holds a key for it; otherwise keep the
             # pair as sent rather than persisting a provider they never selected.
@@ -504,8 +504,8 @@ def _validated_main_model_selection(
     validation) seeded with the configured route, exactly like a ``/model <model> --provider
     <provider> --global``. A bare ``custom`` target carries the submitted endpoint as the current
     one, which is how ``switch_model`` binds a custom base_url/key. Rejections become 400s."""
-    from hermes_cli.config import get_compatible_custom_providers
-    from hermes_cli.model_switch import switch_model
+    from hermes_agent.hermes_cli.config import get_compatible_custom_providers
+    from hermes_agent.hermes_cli.model_switch import switch_model
 
     model_cfg = cfg.get("model") if isinstance(cfg.get("model"), dict) else {}
     is_bare_custom = provider.strip().lower() in {"custom", "local"}
@@ -541,7 +541,7 @@ def _validated_main_model_selection(
         # wire protocol it mandates: ``model.base_url`` and ``model.api_mode`` are persisted
         # together, so a mode derived from the displaced host would route the submitted endpoint
         # over the wrong wire.
-        from hermes_cli.providers import determine_api_mode
+        from hermes_agent.hermes_cli.providers import determine_api_mode
         url = base_url.strip()
         result = replace(result, base_url=url,
                          api_mode=determine_api_mode(result.target_provider, url))
@@ -550,13 +550,13 @@ def _validated_main_model_selection(
 
 def _apply_main_model_assignment(model_cfg: Any, result: "ModelSwitchResult", api_key: str = "") -> dict:
     """Apply a main-slot selection to a ``model`` config dict via the canonical /model shape
-    (``hermes_cli.model_switch.apply_model_selection``). An explicit key for a custom endpoint is
+    (``hermes_agent.hermes_cli.model_switch.apply_model_selection``). An explicit key for a custom endpoint is
     the one inline credential the runtime reads (``model.api_key``); the legacy ``api`` alias is
     dropped so a stale secret cannot shadow it.
 
     Returns a new dict."""
-    from hermes_cli.config_backend import supports_file_tooling
-    from hermes_cli.model_switch import apply_model_selection, remote_model_selection_guard
+    from hermes_agent.hermes_cli.config_backend import supports_file_tooling
+    from hermes_agent.hermes_cli.model_switch import apply_model_selection, remote_model_selection_guard
 
     before = model_cfg
     # Remote Config: the caller saves the effective block as a whole document, so a cleared
@@ -573,9 +573,9 @@ def drop_model_key(model_cfg: dict, key: str) -> None:
     """Remove *key* from a ``model`` block an assignment is building. Under Remote Config the block
     is the EFFECTIVE one, so a key it holds may be inherited from an upper level that a profile
     removal cannot reach (contract §5.4); store null ("no value") instead, the same mask
-    :func:`hermes_cli.model_switch.apply_model_selection` applies. A key the block lacks stays
+    :func:`hermes_agent.hermes_cli.model_switch.apply_model_selection` applies. A key the block lacks stays
     absent. File backend: a plain removal."""
-    from hermes_cli.config_backend import supports_file_tooling
+    from hermes_agent.hermes_cli.config_backend import supports_file_tooling
     if key not in model_cfg:
         return
     if supports_file_tooling():
@@ -605,7 +605,7 @@ def _normalize_config_for_web(config: dict[str, Any]) -> dict[str, Any]:
 # ---------------------------------------------------------------------------
 
 # Canonical auxiliary task slots. Keep in sync with DEFAULT_CONFIG["auxiliary"]
-# in hermes_cli/config.py — listed here for deterministic ordering in the UI.
+# in hermes_agent/hermes_cli/config.py — listed here for deterministic ordering in the UI.
 _AUX_TASK_SLOTS: tuple[str, ...] = (
     "vision", "compression", "approval", "mcp", "title_generation", "review", "voice_chat",
     "triage_specifier", "kanban_decomposer", "profile_describer", "curator",
@@ -622,7 +622,7 @@ def _plugin_aux_tasks() -> list[dict[str, Any]]:
     fail-soft: the built-in slots must keep working without plugins.
     """
     try:
-        from hermes_cli.plugins import get_plugin_auxiliary_tasks
+        from hermes_agent.hermes_cli.plugins import get_plugin_auxiliary_tasks
         return [dict(entry) for entry in get_plugin_auxiliary_tasks()
                 if entry.get("key") and entry["key"] not in _AUX_TASK_SLOTS]
     except Exception:  # health: allow BLE001 -- plugin discovery must never break the built-in slots
@@ -710,8 +710,8 @@ def _apply_nous_gateway_defaults(cfg: dict) -> list:
     *unconfigured* tools through the Nous Tool Gateway. Purely additive — tools with a direct
     key or explicit backend are skipped. Failures never block saving the assignment."""
     try:
-        from hermes_cli.nous_subscription import apply_nous_managed_defaults
-        from hermes_cli.tools_config import _get_platform_tools
+        from hermes_agent.hermes_cli.nous_subscription import apply_nous_managed_defaults
+        from hermes_agent.hermes_cli.tools_config import _get_platform_tools
 
         enabled = _get_platform_tools(cfg, "cli", include_default_mcp_servers=False)
         return sorted(apply_nous_managed_defaults(cfg, enabled_toolsets=enabled, force_fresh=True))
@@ -756,7 +756,7 @@ def _register_custom_endpoint(base_url: str, api_key: str, model: str) -> None:
     GENUINELY new endpoint gets a named row.
     """
     try:
-        from hermes_cli.main_provider_setup import _auto_provider_name, _save_custom_provider
+        from hermes_agent.hermes_cli.main_provider_setup import _auto_provider_name, _save_custom_provider
 
         _save_custom_provider(base_url, api_key, model, name=_auto_provider_name(base_url))
     except Exception:
@@ -820,8 +820,8 @@ def _prepare_main_assignment(cfg: dict, provider: str, model: str, base_url: str
 
 def _apply_main_assignment_sync(cfg: dict, provider: str, model: str, base_url: str, api_key: str,
                                 prepared: "Optional[tuple[str, ModelSwitchResult]]" = None) -> dict:
-    from hermes_cli.config import save_config
-    from hermes_cli.free_tier_bootstrap import reconcile_record
+    from hermes_agent.hermes_cli.config import save_config
+    from hermes_agent.hermes_cli.free_tier_bootstrap import reconcile_record
     # Recorded from the SUBMITTED args, before preparation fills a URL from a named entry.
     explicit_endpoint = _is_explicit_custom_endpoint(provider, base_url)
     base_url, result = prepared or _prepare_main_assignment(cfg, provider, model, base_url, api_key)
@@ -885,14 +885,14 @@ def _normalize_aux_reasoning_effort(value: Optional[str]) -> Optional[str]:
 
 
 def _aux_default_effort(slot: str) -> str:
-    from hermes_cli.config_defaults import DEFAULT_CONFIG
+    from hermes_agent.hermes_cli.config_defaults import DEFAULT_CONFIG
     block = (DEFAULT_CONFIG.get("auxiliary") or {}).get(slot)
     return str(block.get("reasoning_effort") or "") if isinstance(block, dict) else ""
 
 
 def _apply_aux_assignment_sync(cfg: dict, provider: str, model: str, task: str, base_url: str, api_key: str,
                                reasoning_effort: Optional[str] = _UNSET) -> dict:
-    from hermes_cli.config import save_config
+    from hermes_agent.hermes_cli.config import save_config
     aux = cfg.get("auxiliary")
     if not isinstance(aux, dict):
         aux = {}
@@ -973,7 +973,7 @@ def _apply_model_assignment_sync(
     the requested profile. Raises HTTPException for validation errors. ``prepared`` is a
     ``_prepare_main_assignment`` result computed outside the config lock.
     """
-    from hermes_cli.config import load_config
+    from hermes_agent.hermes_cli.config import load_config
     cfg = load_config()
     if scope == "main":
         return _apply_main_assignment_sync(cfg, provider, model, base_url, api_key, prepared)
@@ -993,7 +993,7 @@ def _infer_provider_on_model_change(model_val: str, prev_provider: str) -> tuple
     if not name:
         return "", name
     try:
-        from hermes_cli.models import _AGGREGATOR_PROVIDERS, detect_provider_for_model, normalize_provider
+        from hermes_agent.hermes_cli.models import _AGGREGATOR_PROVIDERS, detect_provider_for_model, normalize_provider
     except Exception:
         return "", name
 
@@ -1006,7 +1006,7 @@ def _infer_provider_on_model_change(model_val: str, prev_provider: str) -> tuple
 
     if "/" in name:
         try:
-            from hermes_cli.models_detect import provider_has_credentials
+            from hermes_agent.hermes_cli.models_detect import provider_has_credentials
 
             cur_is_aggregator = normalize_provider(prev_provider) in _AGGREGATOR_PROVIDERS
             # A vendor slug on a native provider is a guess at an aggregator; never guess one the
@@ -1031,7 +1031,7 @@ def _denormalize_config_from_web(config: dict[str, Any]) -> dict[str, Any]:
     removed). A partial update (Settings autosave diff) that OMITS the key means "unchanged"
     and must leave the on-disk override alone — not be treated as an explicit 0.
     """
-    from hermes_cli.config import load_config
+    from hermes_agent.hermes_cli.config import load_config
     config = dict(config)
     config.pop("_model_meta", None)
 

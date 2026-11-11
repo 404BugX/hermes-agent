@@ -5,7 +5,7 @@ from __future__ import annotations
 
 def build_fallback_parser(subparsers) -> None:
     """Attach the ``fallback`` subcommand to ``subparsers``."""
-    from hermes_cli.fallback_cmd import cmd_fallback
+    from hermes_agent.hermes_cli.fallback_cmd import cmd_fallback
 
     fallback_parser = subparsers.add_parser(
         "fallback", help="Manage fallback providers (tried when the primary model fails)",

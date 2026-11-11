@@ -57,7 +57,7 @@ def home_profile_name() -> str:
     Memoized per (home, root) path pair: the lookup resolves three paths and runs on every
     container-key resolution, several times per tool call."""
     try:
-        from hermes_cli.profiles import get_active_profile_name
+        from hermes_agent.hermes_cli.profiles import get_active_profile_name
         from hermes_constants import get_default_hermes_root, get_hermes_home
 
         home = get_hermes_home()
