@@ -121,7 +121,7 @@ Every former god file is a **facade** (public entry points + the names other pac
   explicitly; `os.environ`, module globals and import-time values hold the launch profile's, so an
   unbound read is a silent default-profile leak. Binding points and seams: `hermes_agent/gateway/AGENTS.md`
   § Profile scope (HX002/HX004/HX005/HX012, PS-P05/P06).
-- **Machine facts and executable lookup go through `hermes_platform`** (`hermes_platform/AGENTS.md`).
+- **Machine facts and executable lookup go through `hermes_platform`** (`hermes_agent/hermes_platform/AGENTS.md`).
 - **Dependencies carry upper bounds** (`>=floor,<next_major`; git URLs and Actions pinned to a SHA);
   after editing `pyproject.toml` run `hermes pm lock` and commit `uv.lock`; never mutate a Hermes
   environment with raw pip/uv. Full policy: `pm/AGENTS.md`.
@@ -158,7 +158,7 @@ Every former god file is a **facade** (public entry points + the names other pac
 | `cron/`, kanban | `hermes_agent/cron/AGENTS.md` | scheduler invariants, job fields, kanban dispatcher |
 | `tests/` | `tests/AGENTS.md` | runner, placement, OS markers, `wine2e`, banned test shapes |
 | `pm/`, `pyproject.toml` | `pm/AGENTS.md` | pinning policy, PM-owned environments, plugin quarantine |
-| `hermes_platform/` | `hermes_platform/AGENTS.md` | host facts, resolvers |
+| `hermes_agent/hermes_platform/` | `hermes_agent/hermes_platform/AGENTS.md` | host facts, resolvers |
 
 Long-form background: `website/docs/developer-guide/`. Workflow rules (PR/issue/review/salvage
 process) live in the `hermes-agent-dev` skill, not here.

@@ -112,7 +112,7 @@ def _scope_profile_name(path: Path) -> Optional[str]:
     ``"default"`` for the default root (its basename -- ``.hermes`` or a custom root -- is not a
     profile name; launched from ``profiles/<name>`` the root is a *different* profile), the
     directory name for ``profiles/<name>``."""
-    from hermes_constants import get_default_hermes_root
+    from hermes_agent.hermes_constants import get_default_hermes_root
     resolved = path.resolve()
     if resolved == get_process_hermes_home().resolve():
         return None
@@ -1022,7 +1022,7 @@ async def update_profile_soul(name: str, body: ProfileSoulUpdate):
     soul_path = _resolve_profile_dir(name) / "SOUL.md"
 
     def _run():
-        from utils import atomic_write_text
+        from hermes_agent.utils import atomic_write_text
         # Atomic: a bare write_text() truncates SOUL.md before the new body lands, and the
         # paired GET reports an unreadable file as "never set" — so an interrupted save would
         # make the editor's next Save persist an empty document. preserve_mode keeps an

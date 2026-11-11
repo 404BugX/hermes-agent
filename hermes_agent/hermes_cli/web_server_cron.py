@@ -147,7 +147,7 @@ def _cron_store_scope(home: Path):
     override keeps these calls from retargeting a concurrent desktop ticker's load/save.
     """
     from hermes_agent.cron import jobs as cron_jobs
-    from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+    from hermes_agent.hermes_constants import reset_hermes_home_override, set_hermes_home_override
     token = set_hermes_home_override(str(home))
     try:
         with cron_jobs.use_cron_store(home):
@@ -350,7 +350,7 @@ def _gateway_fire_endpoint(profile: str, home: Path) -> str:
 
     listener_profile, listener_home = profile, home
     if multiplex and profile != "default":
-        from hermes_constants import get_default_hermes_root
+        from hermes_agent.hermes_constants import get_default_hermes_root
         listener_profile, listener_home = "default", get_default_hermes_root()
         _log.info(
             "cron fire: multiplex gateway — resolving api_server port for %s "
@@ -361,7 +361,7 @@ def _gateway_fire_endpoint(profile: str, home: Path) -> str:
     try:
         # Profile-scoped read through the CANONICAL loader (managed-scope overlay, ${ENV_VAR}
         # expansion) — never a raw yaml.safe_load (tests/hermes_cli/test_config_read_guard.py).
-        from hermes_constants import reset_hermes_home_override, set_hermes_home_override
+        from hermes_agent.hermes_constants import reset_hermes_home_override, set_hermes_home_override
         token = set_hermes_home_override(str(listener_home))
         try:
             profile_cfg = load_config()
